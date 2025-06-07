@@ -1,0 +1,21 @@
+{
+  "name": "greenspace",
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "prebuild": "npm run prebuild --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
+  },
+  "type": "module",
+  "workspaces": [
+    "api"
+  ],
+  "devDependencies": {
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^22.15.30",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
