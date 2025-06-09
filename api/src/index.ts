@@ -29,9 +29,6 @@ app.get("/", (_req: Request, res: Response) => {
 });
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/report", reportRoutes);
-app.post('/api/v1/report/image-upload', (req: Request, res: Response) => {
-    res.json({ message: 'POST route is working!', body: req.body });
-});
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error('❌ Unhandled error:', err);

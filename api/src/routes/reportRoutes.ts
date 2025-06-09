@@ -26,7 +26,7 @@ const upload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-        const allowedMimes: string[] = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedMimes: string[] = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (allowedMimes.includes(file.mimetype)) {
             cb(null, true);
         } else {
