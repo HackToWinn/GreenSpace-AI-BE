@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getReports, storeImageToIPFS } from '../controllers/reportControllers';
+import { getReports, processImage, storeImageToIPFS } from '../controllers/reportControllers';
 
 const uploadDir: string = 'src/report/uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -54,6 +54,6 @@ router.post('/image-upload', (req: Request, res: Response, next: NextFunction) =
         
         next();
     });
-}, storeImageToIPFS);
+}, processImage);
 
 export default router;
