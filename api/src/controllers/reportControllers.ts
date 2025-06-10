@@ -32,6 +32,7 @@ export const storeImageToIPFS = async (file: File, filePath: string, req: Reques
             cid: cid.toString(),
             url: `https://w3s.link/ipfs/${cid}`
         });
+        
     } catch (error: any) {
         console.error('Error in storeImageToIPFS:', error);
 

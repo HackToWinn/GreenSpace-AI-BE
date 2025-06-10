@@ -8,13 +8,16 @@ public type Location = {
   longitude: Float;
 };
 public type Report = {
-    id: Nat;
-    reporter: UserId;
-    timestamp: Time.Time;
-    location: Location;
-    description: Text;
-    imageUrl: Text;
-    aiConfidence: ?Float; 
+  id: Nat;
+  user: UserId;
+  category: Text;
+  description: Text;
+  location: Text;
+  coordinates: Location;
+  imageCid: Text;
+  timestamp: Time.Time;
+  status: Text;
+  rewardGiven: ?Nat;
 };
 public type Reputation = {
   totalReports: Nat;
