@@ -9,7 +9,7 @@
   },
   "type": "module",
   "workspaces": [
-    "api"
+    "api", "proxy_frontend"
   ],
   "devDependencies": {
     "@types/morgan": "^1.9.10",

@@ -5,9 +5,14 @@
       "type": "motoko",
       "args": "--enhanced-orthogonal-persistence",
       "build": ""
+    },
+    "proxy_frontend": {
+      "source": ["proxy_frontend"],
+      "type": "assets",
+      "workspace": "proxy_frontend"
     }
   },
-  
+
   "output_env_file": ".env",
   "defaults": {
     "build": {
