@@ -41,11 +41,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.processImage = exports.analysisImage = exports.storeImageToIPFS = exports.getReports = void 0;
 const fs = __importStar(require("fs"));
 const w3up = __importStar(require("@web3-storage/w3up-client"));
 require("dotenv/config");
+const useActor_1 = __importDefault(require("../hooks/useActor"));
+const crypto_1 = require("crypto");
 const getReports = (req, res) => {
     res.send('Data Rep');
 };
@@ -216,6 +221,26 @@ Please write a detailed, descriptive paragraph that paints a clear picture of th
             analysis,
             category: categoryAnalysis,
             timestamp: new Date().toISOString()
+        });
+        const cid = (0, exports.storeImageToIPFS)(file, filePath, req, res, {
+            description,
+            analysis,
+            category: categoryAnalysis,
+            timestamp: new Date().toISOString()
+        });
+        const resolvedCid = yield cid;
+        const Actor = (0, useActor_1.default)();
+        Actor.addReport(crypto_1.randomUUID.toString(), {
+            id: crypto_1.randomUUID.toString(),
+            user: req.body.user,
+            category: categoryAnalysis,
+            description: description,
+            location: req.body.location,
+            coordinates: req.body.coordinates,
+            status: 'pending',
+            imageCid: resolvedCid,
+            timestamp: new Date(),
+            rewardGiven: [],
         });
     }
     catch (error) {

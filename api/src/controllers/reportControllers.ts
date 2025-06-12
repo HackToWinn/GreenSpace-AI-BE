@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import * as fs from 'fs';
-import * as w3up from '@web3-storage/w3up-client';
 import * as multer from 'multer';
 import 'dotenv/config';
 import useActor from '../hooks/useActor';
 import { randomUUID } from 'crypto';
-
 
 interface MulterRequest extends Request {
     file?: Express.Multer.File;
@@ -22,25 +20,92 @@ export const storeImageToIPFS = async (file: File, filePath: string, req: Reques
     timestamp: string;
 }) => {
     try {
+        // Dynamic import untuk ESM module
+        const w3up = await import('@web3-storage/w3up-client');
         const client = await w3up.create();
+
         await client.login(process.env.WEB3_STORAGE_EMAIL as `${string}@${string}`);
         await client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY!}`);
 
         const cid = await client.uploadFile(file);
 
-        fs.unlinkSync(filePath);
+        // Hapus file setelah upload berhasil
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
 
         res.json({
             success: true,
             cid: cid.toString(),
-            url: `https://w3s.link/ipfs/${cid}`
+            url: `https://w3s.link/ipfs/${cid}`,
+            analysisResult
         });
-        
+
+    } catch (error: any) {
+        console.error('Error in storeImageToIPFS:', error);
+
+        // Cleanup file jika terjadi error
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        // Cleanup file dari parameter jika berbeda
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        res.status(500).json({
+            error: 'Failed to store image',
+            details: error.message
+        });
+    }
+}
+
+// Fungsi helper untuk inisialisasi w3up client (opsional)
+export const initW3StorageClient = async () => {
+    try {
+        const w3up = await import('@web3-storage/w3up-client');
+        const client = await w3up.create();
+        await client.login(process.env.WEB3_STORAGE_EMAIL as `${string}@${string}`);
+        await client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY!}`);
+        return client;
+    } catch (error) {
+        console.error('Failed to initialize w3up client:', error);
+        throw error;
+    }
+}
+
+// Alternatif fungsi storeImageToIPFS yang menggunakan helper
+export const storeImageToIPFSWithHelper = async (file: File, filePath: string, req: Request, res: Response, analysisResult: {
+    description: string;
+    analysis: string;
+    category: string;
+    timestamp: string;
+}) => {
+    try {
+        const client = await initW3StorageClient();
+        const cid = await client.uploadFile(file);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+
+        res.json({
+            success: true,
+            cid: cid.toString(),
+            url: `https://w3s.link/ipfs/${cid}`,
+            analysisResult
+        });
+
     } catch (error: any) {
         console.error('Error in storeImageToIPFS:', error);
 
         if (req.file && req.file.path && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
+        }
+
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
         }
 
         res.status(500).json({
@@ -218,16 +283,32 @@ Please write a detailed, descriptive paragraph that paints a clear picture of th
             timestamp: new Date().toISOString()
         });
 
-        const Actor = useActor();
+        const cid = storeImageToIPFS(file, filePath, req, res, {
+            description,
+            analysis,
+            category: categoryAnalysis,
+            timestamp: new Date().toISOString()
+        });
 
-        const reportId = BigInt(Date.now());
+        const resolvedCid = await cid;
+
+        const Actor = await useActor();
 
         Actor.addReport(randomUUID.toString(), {
-          id: reportId,
-          timestamp: new Date().toISOString(),
-          user: req.body.user,
-          category: categoryAnalysis,
-          description: description,  
+            id: randomUUID.toString(),
+            user: req.body.user,
+            category: categoryAnalysis,
+            description: description,
+            location: req.body.location,
+            coordinates: req.body.coordinates,
+            status: 'pending',
+            imageCid: resolvedCid,
+            timestamp: new Date(),
+            rewardGiven: [],
+        })
+
+        res.json({
+            status: 'success',
         })
 
     } catch (error) {

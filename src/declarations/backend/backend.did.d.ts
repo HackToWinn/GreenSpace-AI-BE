@@ -4,13 +4,13 @@ import type { IDL } from '@dfinity/candid';
 
 export interface Location { 'latitude' : number, 'longitude' : number }
 export interface Report {
-  'id' : bigint,
+  'id' : string,
   'status' : string,
   'user' : UserId,
   'description' : string,
-  'imageCid' : string,
+  'imageCid' : void,
   'rewardGiven' : [] | [bigint],
-  'timestamp' : Time,
+  'timestamp' : Date,
   'category' : string,
   'location' : string,
   'coordinates' : Location,
