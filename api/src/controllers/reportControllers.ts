@@ -203,160 +203,125 @@ export const processImage = async (req: Request, res: Response) => {
 
         console.log('Image caption:', caption);
 
-        // Predict disaster consequences using Zephyr model
-        const disasterPrompt = `Based on this image description: "${caption}", analyze if this shows signs of a natural disaster and predict potential secondary disasters or consequences that might follow. Provide a detailed assessment including:
-1. Type of disaster identified (if any)
-2. Potential secondary disasters
-3. Risk assessment
-4. Immediate concerns
-5. Long-term implications
+        // Combined comprehensive analysis using single Zephyr API call
+        const comprehensivePrompt = `Based on this image description: "${caption}", provide a comprehensive analysis in the following structured format:
 
-Please be specific and factual in your analysis.`;
+**DETAILED_DESCRIPTION:**
+[Provide a detailed description of what is shown in the image, including visual elements, environmental conditions, structural details, people/activities, atmospheric conditions, and overall scene composition]
 
-        const zephyrResponse = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
+**DISASTER_ANALYSIS:**
+[Analyze if this shows signs of a natural disaster and predict potential consequences including: type of disaster, potential secondary disasters, risk assessment, immediate concerns, and long-term implications]
+
+**CATEGORY:**
+[Classify into one category: FLOOD, FIRE, EARTHQUAKE, STORM, LANDSLIDE, DROUGHT, VOLCANIC, or NONE]
+
+**CONFIDENCE:**
+[Provide confidence score as percentage 0-100%]
+
+**REASONING:**
+[Brief explanation for the categorization]
+
+Please be specific, factual, and ensure each section is clearly marked with the exact headers shown above.`;
+
+        const comprehensiveResponse = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                inputs: disasterPrompt,
+                inputs: comprehensivePrompt,
                 parameters: {
-                    max_new_tokens: 500,
-                    temperature: 0.7,
+                    max_new_tokens: 800,
+                    temperature: 0.5,
                     do_sample: true,
                     top_p: 0.9
                 }
             }),
         });
 
-        if (!zephyrResponse.ok) {
-            throw new Error(`Zephyr API error: ${zephyrResponse.status}`);
+        if (!comprehensiveResponse.ok) {
+            throw new Error(`Comprehensive analysis API error: ${comprehensiveResponse.status}`);
         }
 
-        const zephyrResult = await zephyrResponse.json();
-        const analysis = zephyrResult[0]?.generated_text || 'No disaster analysis generated';
+        const comprehensiveResult = await comprehensiveResponse.json();
+        const fullAnalysis = comprehensiveResult[0]?.generated_text || 'No analysis generated';
 
-        console.log('Disaster analysis:', analysis);
+        console.log('Comprehensive analysis:', fullAnalysis);
 
-        // Categorize disaster based on analysis
-        const categoryPrompt = `Based on this disaster analysis: "${analysis}", classify the disaster into one of these categories and provide a confidence score:
+        // Parse the structured response
+        const parseAnalysis = (text: string) => {
+            const sections = {
+                description: 'No detailed description generated',
+                analysis: 'No disaster analysis generated',
+                category: 'NONE',
+                confidence: '0',
+                reasoning: 'Unable to analyze'
+            };
 
-Categories:
-- FLOOD: Water-related disasters, flooding, tsunamis
-- FIRE: Wildfires, building fires, forest fires
-- EARTHQUAKE: Seismic activities, structural damage from earthquakes
-- STORM: Hurricanes, tornadoes, severe weather
-- LANDSLIDE: Landslides, mudslides, ground movement
-- DROUGHT: Water scarcity, agricultural impact
-- VOLCANIC: Volcanic eruptions, ash, lava
-- NONE: No disaster detected
+            try {
+                // Extract detailed description
+                const descMatch = text.match(/\*\*DETAILED_DESCRIPTION:\*\*\s*([\s\S]*?)(?=\*\*DISASTER_ANALYSIS:\*\*|$)/i);
+                if (descMatch) sections.description = descMatch[1].trim();
 
-Respond in this exact format:
-Category: [CATEGORY_NAME]
-Confidence: [0-100]%
-Reasoning: [brief explanation]`;
+                // Extract disaster analysis
+                const analysisMatch = text.match(/\*\*DISASTER_ANALYSIS:\*\*\s*([\s\S]*?)(?=\*\*CATEGORY:\*\*|$)/i);
+                if (analysisMatch) sections.analysis = analysisMatch[1].trim();
 
-        const categoryResponse = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inputs: categoryPrompt,
-                parameters: {
-                    max_new_tokens: 150,
-                    temperature: 0.3,
-                    do_sample: true,
-                    top_p: 0.8
-                }
-            }),
-        });
+                // Extract category
+                const categoryMatch = text.match(/\*\*CATEGORY:\*\*\s*([A-Z]+)/i);
+                if (categoryMatch) sections.category = categoryMatch[1].trim();
 
-        if (!categoryResponse.ok) {
-            throw new Error(`Category API error: ${categoryResponse.status}`);
-        }
+                // Extract confidence
+                const confidenceMatch = text.match(/\*\*CONFIDENCE:\*\*\s*(\d+)%?/i);
+                if (confidenceMatch) sections.confidence = confidenceMatch[1].trim();
 
-        const categoryResult = await categoryResponse.json();
-        const categoryAnalysis = categoryResult[0]?.generated_text || 'Category: NONE\nConfidence: 0%\nReasoning: Unable to categorize';
+                // Extract reasoning
+                const reasoningMatch = text.match(/\*\*REASONING:\*\*\s*([\s\S]*?)$/i);
+                if (reasoningMatch) sections.reasoning = reasoningMatch[1].trim();
 
-        console.log('Disaster category:', categoryAnalysis);
+            } catch (parseError) {
+                console.error('Error parsing analysis:', parseError);
+            }
+
+            return sections;
+        };
+
+        const parsedAnalysis = parseAnalysis(fullAnalysis);
+
+        // Format category analysis for consistency
+        const categoryAnalysis = `Category: ${parsedAnalysis.category}\nConfidence: ${parsedAnalysis.confidence}%\nReasoning: ${parsedAnalysis.reasoning}`;
+
+        console.log('Parsed analysis:', parsedAnalysis);
 
         const file = new File([fileBuffer], req.file.originalname);
 
-        // Generate detailed description using Zephyr model
-        const descriptionPrompt = `Based on this image caption: "${caption}", provide a detailed and comprehensive description of what is shown in the image. Include details about:
-1. Visual elements and objects present
-2. Environmental conditions
-3. Structural details
-4. People or activities (if any)
-5. Atmospheric or weather conditions
-6. Overall scene composition
-
-Please write a detailed, descriptive paragraph that paints a clear picture of the scene.`;
-
-        const descriptionResponse = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inputs: descriptionPrompt,
-                parameters: {
-                    max_new_tokens: 300,
-                    temperature: 0.6,
-                    do_sample: true,
-                    top_p: 0.85
-                }
-            }),
-        });
-
-        if (!descriptionResponse.ok) {
-            throw new Error(`Description API error: ${descriptionResponse.status}`);
-        }
-
-        const descriptionResult = await descriptionResponse.json();
-        const description = descriptionResult[0]?.generated_text || 'No detailed description generated';
-
-        console.log('Detailed description:', description);
-
-        // Store to IPFS with description, disaster analysis, and category
-        storeImageToIPFS(file, filePath, req, res, {
-            description,
-            analysis,
+        // Store to IPFS with parsed analysis data
+        const cid = await storeImageToIPFS(file, filePath, req, res, {
+            description: parsedAnalysis.description,
+            analysis: parsedAnalysis.analysis,
             category: categoryAnalysis,
             timestamp: new Date().toISOString()
         });
-
-        const cid = storeImageToIPFS(file, filePath, req, res, {
-            description,
-            analysis,
-            category: categoryAnalysis,
-            timestamp: new Date().toISOString()
-        });
-
-        const resolvedCid = await cid;
 
         const Actor = await useActor();
 
-        Actor.addReport(randomUUID.toString(), {
+        await Actor.addReport(randomUUID.toString(), {
             id: randomUUID.toString(),
             user: req.body.user,
             category: categoryAnalysis,
-            description: description,
+            description: parsedAnalysis.description,
             location: req.body.location,
             coordinates: req.body.coordinates,
             status: 'pending',
-            imageCid: resolvedCid,
+            imageCid: cid,
             timestamp: new Date(),
             rewardGiven: [],
-        })
+        });
 
         res.json({
             status: 'success',
-        })
+        });
 
     } catch (error) {
         console.error('Error processing image:', error);

@@ -87,4 +87,6 @@ router.post('/image-upload', (req, res, next) => {
         next();
     });
 }, reportControllers_1.processImage);
+router.get('/this-week', reportControllers_1.getReportsThisWeek);
+router.get('/total-this-week', reportControllers_1.getTotalReportsThisWeek);
 exports.default = router;

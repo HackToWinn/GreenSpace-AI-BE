@@ -13,7 +13,7 @@ const reportRoutes_1 = __importDefault(require("./routes/reportRoutes"));
 dotenv_1.default.config();
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
 const app = (0, express_1.default)();
-const PORT = process.env.EXPRESS_PORT || 3000;
+const PORT = process.env.EXPRESS_PORT || 3001;
 app.use((0, cors_1.default)());
 app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.json());

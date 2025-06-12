@@ -45,9 +45,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processImage = exports.analysisImage = exports.storeImageToIPFS = exports.getReports = void 0;
+exports.processImage = exports.getTotalReportsThisWeek = exports.getReportsThisWeek = exports.fetchAllReports = exports.storeImageToIPFSWithHelper = exports.initW3StorageClient = exports.storeImageToIPFS = exports.getReports = void 0;
 const fs = __importStar(require("fs"));
-const w3up = __importStar(require("@web3-storage/w3up-client"));
 require("dotenv/config");
 const useActor_1 = __importDefault(require("../hooks/useActor"));
 const crypto_1 = require("crypto");
@@ -57,21 +56,32 @@ const getReports = (req, res) => {
 exports.getReports = getReports;
 const storeImageToIPFS = (file, filePath, req, res, analysisResult) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Dynamic import untuk ESM module
+        const w3up = yield Promise.resolve().then(() => __importStar(require('@web3-storage/w3up-client')));
         const client = yield w3up.create();
         yield client.login(process.env.WEB3_STORAGE_EMAIL);
         yield client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY}`);
         const cid = yield client.uploadFile(file);
-        fs.unlinkSync(filePath);
+        // Hapus file setelah upload berhasil
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
         res.json({
             success: true,
             cid: cid.toString(),
-            url: `https://w3s.link/ipfs/${cid}`
+            url: `https://w3s.link/ipfs/${cid}`,
+            analysisResult
         });
     }
     catch (error) {
         console.error('Error in storeImageToIPFS:', error);
+        // Cleanup file jika terjadi error
         if (req.file && req.file.path && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
+        }
+        // Cleanup file dari parameter jika berbeda
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
         }
         res.status(500).json({
             error: 'Failed to store image',
@@ -80,11 +90,107 @@ const storeImageToIPFS = (file, filePath, req, res, analysisResult) => __awaiter
     }
 });
 exports.storeImageToIPFS = storeImageToIPFS;
-const analysisImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Fungsi helper untuk inisialisasi w3up client (opsional)
+const initW3StorageClient = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const w3up = yield Promise.resolve().then(() => __importStar(require('@web3-storage/w3up-client')));
+        const client = yield w3up.create();
+        yield client.login(process.env.WEB3_STORAGE_EMAIL);
+        yield client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY}`);
+        return client;
+    }
+    catch (error) {
+        console.error('Failed to initialize w3up client:', error);
+        throw error;
+    }
 });
-exports.analysisImage = analysisImage;
+exports.initW3StorageClient = initW3StorageClient;
+// Alternatif fungsi storeImageToIPFS yang menggunakan helper
+const storeImageToIPFSWithHelper = (file, filePath, req, res, analysisResult) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const client = yield (0, exports.initW3StorageClient)();
+        const cid = yield client.uploadFile(file);
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        res.json({
+            success: true,
+            cid: cid.toString(),
+            url: `https://w3s.link/ipfs/${cid}`,
+            analysisResult
+        });
+    }
+    catch (error) {
+        console.error('Error in storeImageToIPFS:', error);
+        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        res.status(500).json({
+            error: 'Failed to store image',
+            details: error.message
+        });
+    }
+});
+exports.storeImageToIPFSWithHelper = storeImageToIPFSWithHelper;
+const fetchAllReports = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const Actor = yield (0, useActor_1.default)();
+        const reports = yield Actor.fetchAllValidReport();
+        res.json({
+            success: true,
+            reports: reports
+        });
+    }
+    catch (error) {
+        console.error('Error fetching reports:', error);
+        res.status(500).json({
+            error: 'Failed to fetch reports',
+            details: error.message
+        });
+    }
+});
+exports.fetchAllReports = fetchAllReports;
+const getReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const Actor = yield (0, useActor_1.default)();
+        const reportsThisWeek = yield Actor.getReportsThisWeek();
+        res.json({
+            success: true,
+            reports: reportsThisWeek
+        });
+    }
+    catch (error) {
+        console.error('Error fetching reports this week:', error);
+        res.status(500).json({
+            error: 'Failed to fetch reports this week',
+            details: error.message
+        });
+    }
+});
+exports.getReportsThisWeek = getReportsThisWeek;
+const getTotalReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const Actor = yield (0, useActor_1.default)();
+        const totalReportsThisWeek = yield (Actor).getReportsThisWeek();
+        res.json({
+            success: true,
+            total: totalReportsThisWeek.toString()
+        });
+    }
+    catch (error) {
+        console.error('Error fetching total reports this week:', error);
+        res.status(500).json({
+            error: 'Failed to fetch total reports this week',
+            details: error.message
+        });
+    }
+});
+exports.getTotalReportsThisWeek = getTotalReportsThisWeek;
 const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b;
     if (!req.file) {
         res.status(400).json({ error: 'No file uploaded' });
         return;
@@ -112,135 +218,110 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const captionResult = yield captionResponse.json();
         const caption = ((_a = captionResult[0]) === null || _a === void 0 ? void 0 : _a.generated_text) || 'No caption generated';
         console.log('Image caption:', caption);
-        // Predict disaster consequences using Zephyr model
-        const disasterPrompt = `Based on this image description: "${caption}", analyze if this shows signs of a natural disaster and predict potential secondary disasters or consequences that might follow. Provide a detailed assessment including:
-1. Type of disaster identified (if any)
-2. Potential secondary disasters
-3. Risk assessment
-4. Immediate concerns
-5. Long-term implications
+        // Combined comprehensive analysis using single Zephyr API call
+        const comprehensivePrompt = `Based on this image description: "${caption}", provide a comprehensive analysis in the following structured format:
 
-Please be specific and factual in your analysis.`;
-        const zephyrResponse = yield fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
+**DETAILED_DESCRIPTION:**
+[Provide a detailed description of what is shown in the image, including visual elements, environmental conditions, structural details, people/activities, atmospheric conditions, and overall scene composition]
+
+**DISASTER_ANALYSIS:**
+[Analyze if this shows signs of a natural disaster and predict potential consequences including: type of disaster, potential secondary disasters, risk assessment, immediate concerns, and long-term implications]
+
+**CATEGORY:**
+[Classify into one category: FLOOD, FIRE, EARTHQUAKE, STORM, LANDSLIDE, DROUGHT, VOLCANIC, or NONE]
+
+**CONFIDENCE:**
+[Provide confidence score as percentage 0-100%]
+
+**REASONING:**
+[Brief explanation for the categorization]
+
+Please be specific, factual, and ensure each section is clearly marked with the exact headers shown above.`;
+        const comprehensiveResponse = yield fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                inputs: disasterPrompt,
+                inputs: comprehensivePrompt,
                 parameters: {
-                    max_new_tokens: 500,
-                    temperature: 0.7,
+                    max_new_tokens: 800,
+                    temperature: 0.5,
                     do_sample: true,
                     top_p: 0.9
                 }
             }),
         });
-        if (!zephyrResponse.ok) {
-            throw new Error(`Zephyr API error: ${zephyrResponse.status}`);
+        if (!comprehensiveResponse.ok) {
+            throw new Error(`Comprehensive analysis API error: ${comprehensiveResponse.status}`);
         }
-        const zephyrResult = yield zephyrResponse.json();
-        const analysis = ((_b = zephyrResult[0]) === null || _b === void 0 ? void 0 : _b.generated_text) || 'No disaster analysis generated';
-        console.log('Disaster analysis:', analysis);
-        // Categorize disaster based on analysis
-        const categoryPrompt = `Based on this disaster analysis: "${analysis}", classify the disaster into one of these categories and provide a confidence score:
-
-Categories:
-- FLOOD: Water-related disasters, flooding, tsunamis
-- FIRE: Wildfires, building fires, forest fires
-- EARTHQUAKE: Seismic activities, structural damage from earthquakes
-- STORM: Hurricanes, tornadoes, severe weather
-- LANDSLIDE: Landslides, mudslides, ground movement
-- DROUGHT: Water scarcity, agricultural impact
-- VOLCANIC: Volcanic eruptions, ash, lava
-- NONE: No disaster detected
-
-Respond in this exact format:
-Category: [CATEGORY_NAME]
-Confidence: [0-100]%
-Reasoning: [brief explanation]`;
-        const categoryResponse = yield fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inputs: categoryPrompt,
-                parameters: {
-                    max_new_tokens: 150,
-                    temperature: 0.3,
-                    do_sample: true,
-                    top_p: 0.8
-                }
-            }),
-        });
-        if (!categoryResponse.ok) {
-            throw new Error(`Category API error: ${categoryResponse.status}`);
-        }
-        const categoryResult = yield categoryResponse.json();
-        const categoryAnalysis = ((_c = categoryResult[0]) === null || _c === void 0 ? void 0 : _c.generated_text) || 'Category: NONE\nConfidence: 0%\nReasoning: Unable to categorize';
-        console.log('Disaster category:', categoryAnalysis);
+        const comprehensiveResult = yield comprehensiveResponse.json();
+        const fullAnalysis = ((_b = comprehensiveResult[0]) === null || _b === void 0 ? void 0 : _b.generated_text) || 'No analysis generated';
+        console.log('Comprehensive analysis:', fullAnalysis);
+        // Parse the structured response
+        const parseAnalysis = (text) => {
+            const sections = {
+                description: 'No detailed description generated',
+                analysis: 'No disaster analysis generated',
+                category: 'NONE',
+                confidence: '0',
+                reasoning: 'Unable to analyze'
+            };
+            try {
+                // Extract detailed description
+                const descMatch = text.match(/\*\*DETAILED_DESCRIPTION:\*\*\s*([\s\S]*?)(?=\*\*DISASTER_ANALYSIS:\*\*|$)/i);
+                if (descMatch)
+                    sections.description = descMatch[1].trim();
+                // Extract disaster analysis
+                const analysisMatch = text.match(/\*\*DISASTER_ANALYSIS:\*\*\s*([\s\S]*?)(?=\*\*CATEGORY:\*\*|$)/i);
+                if (analysisMatch)
+                    sections.analysis = analysisMatch[1].trim();
+                // Extract category
+                const categoryMatch = text.match(/\*\*CATEGORY:\*\*\s*([A-Z]+)/i);
+                if (categoryMatch)
+                    sections.category = categoryMatch[1].trim();
+                // Extract confidence
+                const confidenceMatch = text.match(/\*\*CONFIDENCE:\*\*\s*(\d+)%?/i);
+                if (confidenceMatch)
+                    sections.confidence = confidenceMatch[1].trim();
+                // Extract reasoning
+                const reasoningMatch = text.match(/\*\*REASONING:\*\*\s*([\s\S]*?)$/i);
+                if (reasoningMatch)
+                    sections.reasoning = reasoningMatch[1].trim();
+            }
+            catch (parseError) {
+                console.error('Error parsing analysis:', parseError);
+            }
+            return sections;
+        };
+        const parsedAnalysis = parseAnalysis(fullAnalysis);
+        // Format category analysis for consistency
+        const categoryAnalysis = `Category: ${parsedAnalysis.category}\nConfidence: ${parsedAnalysis.confidence}%\nReasoning: ${parsedAnalysis.reasoning}`;
+        console.log('Parsed analysis:', parsedAnalysis);
         const file = new File([fileBuffer], req.file.originalname);
-        // Generate detailed description using Zephyr model
-        const descriptionPrompt = `Based on this image caption: "${caption}", provide a detailed and comprehensive description of what is shown in the image. Include details about:
-1. Visual elements and objects present
-2. Environmental conditions
-3. Structural details
-4. People or activities (if any)
-5. Atmospheric or weather conditions
-6. Overall scene composition
-
-Please write a detailed, descriptive paragraph that paints a clear picture of the scene.`;
-        const descriptionResponse = yield fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inputs: descriptionPrompt,
-                parameters: {
-                    max_new_tokens: 300,
-                    temperature: 0.6,
-                    do_sample: true,
-                    top_p: 0.85
-                }
-            }),
-        });
-        if (!descriptionResponse.ok) {
-            throw new Error(`Description API error: ${descriptionResponse.status}`);
-        }
-        const descriptionResult = yield descriptionResponse.json();
-        const description = ((_d = descriptionResult[0]) === null || _d === void 0 ? void 0 : _d.generated_text) || 'No detailed description generated';
-        console.log('Detailed description:', description);
-        // Store to IPFS with description, disaster analysis, and category
-        (0, exports.storeImageToIPFS)(file, filePath, req, res, {
-            description,
-            analysis,
+        // Store to IPFS with parsed analysis data
+        const cid = yield (0, exports.storeImageToIPFS)(file, filePath, req, res, {
+            description: parsedAnalysis.description,
+            analysis: parsedAnalysis.analysis,
             category: categoryAnalysis,
             timestamp: new Date().toISOString()
         });
-        const cid = (0, exports.storeImageToIPFS)(file, filePath, req, res, {
-            description,
-            analysis,
-            category: categoryAnalysis,
-            timestamp: new Date().toISOString()
-        });
-        const resolvedCid = yield cid;
-        const Actor = (0, useActor_1.default)();
-        Actor.addReport(crypto_1.randomUUID.toString(), {
+        const Actor = yield (0, useActor_1.default)();
+        yield Actor.addReport(crypto_1.randomUUID.toString(), {
             id: crypto_1.randomUUID.toString(),
             user: req.body.user,
             category: categoryAnalysis,
-            description: description,
+            description: parsedAnalysis.description,
             location: req.body.location,
             coordinates: req.body.coordinates,
             status: 'pending',
-            imageCid: resolvedCid,
+            imageCid: cid,
             timestamp: new Date(),
             rewardGiven: [],
+        });
+        res.json({
+            status: 'success',
         });
     }
     catch (error) {
