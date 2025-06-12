@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getReports, processImage, storeImageToIPFS } from '../controllers/reportControllers';
+import { getReports, processImage, storeImageToIPFS, getReportsThisWeek, getTotalReportsThisWeek } from '../controllers/reportControllers';
 
 const uploadDir: string = 'src/report/uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -55,5 +55,8 @@ router.post('/image-upload', (req: Request, res: Response, next: NextFunction) =
         next();
     });
 }, processImage);
+
+router.get('/this-week', getReportsThisWeek);
+router.get('/total-this-week', getTotalReportsThisWeek);
 
 export default router;

@@ -114,12 +114,59 @@ export const storeImageToIPFSWithHelper = async (file: File, filePath: string, r
         });
     }
 }
+export const fetchAllReports = async (req: Request, res: Response) => {
+    try {
+        const Actor = useActor();
+        const reports = await Actor.fetchAllValidReport();
+        
+        res.json({
+            success: true,
+            reports: reports
+        });
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+        res.status(500).json({
+            error: 'Failed to fetch reports',
+            details: (error as Error).message
+        });
+    }
+};
 
-export const analysisImage = async (req: Request, res: Response) => {
+export const getReportsThisWeek = async (req: Request, res: Response) => {
+    try {
+        const Actor = useActor();
+        const reportsThisWeek = await Actor.getReportsThisWeek();
+        res.json({
+            success: true,
+            reports: reportsThisWeek
+        });
+    } catch (error) {
+        console.error('Error fetching reports this week:', error);
+        res.status(500).json({
+            error: 'Failed to fetch reports this week',
+            details: (error as Error).message
+        });
+    }
+};
 
-}
-
-export const processImage = async (req: Request, res: Response) => {
+export const getTotalReportsThisWeek = async (req: Request, res: Response) => {
+    try {
+        const Actor = useActor();
+        const totalReportsThisWeek = await Actor.getReportsThisWeek();
+        
+        res.json({
+            success: true,
+            total: totalReportsThisWeek.toString()
+        });
+    } catch (error) {
+        console.error('Error fetching total reports this week:', error);
+        res.status(500).json({
+            error: 'Failed to fetch total reports this week',
+            details: (error as Error).message
+        });
+    }
+};
+export const processImage = async (req: Request, res: Response) => {    
     if (!req.file) {
         res.status(400).json({ error: 'No file uploaded' });
         return;
