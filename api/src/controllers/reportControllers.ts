@@ -71,7 +71,6 @@ export const getReportsThisWeek = async (req: Request, res: Response) => {
     try {
         const Actor = useActor();
         const reportsThisWeek = await Actor.getReportsThisWeek();
-        
         res.json({
             success: true,
             reports: reportsThisWeek
@@ -270,13 +269,13 @@ Please write a detailed, descriptive paragraph that paints a clear picture of th
 
         const reportId = BigInt(Date.now());
 
-        Actor.addReport(randomUUID.toString(), {
-          id: reportId,
-          timestamp: new Date().toISOString(),
-          user: req.body.user,
-          category: categoryAnalysis,
-          description: description,  
-        })
+        // Actor.addReport(randomUUID.toString(), {
+        //   id: reportId,
+        //   timestamp: new Date().toISOString(),
+        //   user: req.body.user,
+        //   category: categoryAnalysis,
+        //   description: description,  
+        // })
 
     } catch (error) {
         console.error('Error processing image:', error);
