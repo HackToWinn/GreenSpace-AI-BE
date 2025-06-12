@@ -21,6 +21,9 @@ export const idlFactory = ({ IDL }) => {
     'addReport' : IDL.Func([IDL.Text, Report], [], []),
     'fetchAllValidReport' : IDL.Func([], [IDL.Vec(Report)], []),
     'getReport' : IDL.Func([IDL.Text], [IDL.Opt(Report)], []),
+    'getReportsThisWeek' : IDL.Func([], [IDL.Vec(Report)], []),
+    'getTotalReports' : IDL.Func([], [IDL.Nat], []),
+    'getTotalReportsThisWeek' : IDL.Func([], [IDL.Nat], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

@@ -5,6 +5,8 @@ import User "./user";
 import BTree "mo:stableheapbtreemap/BTree";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
+import Time "mo:base/Time";
+import Array "mo:base/Array";
 
 
 actor {
@@ -27,5 +29,36 @@ actor {
 
     public func fetchAllValidReport(): async[Types.Report] {
        return await Report.getAllValidReports(reports);
-    }
+    };
+    public func getTotalReportsThisWeek(): async Nat {
+      let currentTime = Time.now();
+      let oneWeekInNanos = 7 * 24 * 60 * 60 * 1_000_000_000; 
+      let weekStartTime = currentTime - oneWeekInNanos;
+      
+      var weeklyCount = 0;
+      for ((id, report) in BTree.entries(reports)) {
+        if (report.timestamp >= weekStartTime) {
+          weeklyCount += 1;
+        };
+      };
+      
+      return weeklyCount;
+    };
+    public func getReportsThisWeek(): async [Types.Report] {
+      let currentTime = Time.now();
+      let oneWeekInNanos = 7 * 24 * 60 * 60 * 1_000_000_000; 
+      let weekStartTime = currentTime - oneWeekInNanos;
+      
+      var weeklyReports: [Types.Report] = [];
+      for ((id, report) in BTree.entries(reports)) {
+        if (report.timestamp >= weekStartTime) {
+          weeklyReports := Array.append(weeklyReports, [report]);
+        };
+      };
+      
+      return weeklyReports;
+    };
+    public func getTotalReports(): async Nat {
+      return BTree.size(reports);
+    };
 }

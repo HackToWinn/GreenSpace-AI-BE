@@ -21,6 +21,9 @@ export interface _SERVICE {
   'addReport' : ActorMethod<[string, Report], undefined>,
   'fetchAllValidReport' : ActorMethod<[], Array<Report>>,
   'getReport' : ActorMethod<[string], [] | [Report]>,
+  'getReportsThisWeek' : ActorMethod<[], Array<Report>>,
+  'getTotalReports' : ActorMethod<[], bigint>,
+  'getTotalReportsThisWeek' : ActorMethod<[], bigint>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

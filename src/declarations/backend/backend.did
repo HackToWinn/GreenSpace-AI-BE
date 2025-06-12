@@ -19,7 +19,10 @@ type Location =
    longitude: float64;
  };
 service : {
-  addReport: (id: text, report: Report) -> ();
+  addReport: (text, Report) -> ();
   fetchAllValidReport: () -> (vec Report);
-  getReport: (id: text) -> (opt Report);
+  getReport: (text) -> (opt Report);
+  getReportsThisWeek: () -> (vec Report);
+  getTotalReports: () -> (nat);
+  getTotalReportsThisWeek: () -> (nat);
 }
