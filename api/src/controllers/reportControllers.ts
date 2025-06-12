@@ -1,13 +1,10 @@
 import { Request, Response } from 'express';
 import * as fs from 'fs';
-import * as multer from 'multer';
 import 'dotenv/config';
 import useActor from '../hooks/useActor';
-import { randomUUID } from 'crypto';
+import { AzureKeyCredential } from '@azure/core-auth';
+import ImageAnalysisClient, { isUnexpected } from '@azure-rest/ai-vision-image-analysis';
 
-interface MulterRequest extends Request {
-    file?: Express.Multer.File;
-}
 
 export const getReports = (req: Request, res: Response) => {
     res.send('Data Rep');
@@ -172,7 +169,6 @@ export const processImage = async (req: Request, res: Response) => {
         return;
     }
 
-    console.log('File received:', req.file);
 
     const filePath: string = req.file.path;
 
@@ -183,15 +179,15 @@ export const processImage = async (req: Request, res: Response) => {
 
     try {
         const fileBuffer: Buffer = fs.readFileSync(filePath);
+        const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
+        const credential = new AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY!);
+        const endpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT!;
 
-        // Get image caption using BLIP model
-        const captionResponse = await fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-                'Content-Type': 'application/octet-stream',
-            },
+        const client = ImageAnalysisClient(endpoint, credential);
+        
+        const result = await client.path("/imageanalysis:analyze").post({
             body: fileBuffer,
+<<<<<<< HEAD
         });
 
         if (!captionResponse.ok) {
@@ -321,6 +317,22 @@ Please be specific, factual, and ensure each section is clearly marked with the 
 
         res.json({
             status: 'success',
+=======
+            queryParameters: {
+                features: features,
+                "smartCrops-aspect-ratios": [0.9, 1.33],
+            },
+            contentType: "application/octet-stream"
+        });
+
+        if (isUnexpected(result)) {
+            throw new Error(`Analysis failed: ${result.body.error?.message}`);
+        }
+
+        res.json({
+            status: 'success',
+            analysis: result.body
+>>>>>>> e32e3b7c3747a6f614db0c46ef75fac66fd3f9d2
         });
 
     } catch (error) {

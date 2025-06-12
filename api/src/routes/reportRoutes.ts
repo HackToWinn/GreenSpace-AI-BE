@@ -56,6 +56,7 @@ router.post('/image-upload', (req: Request, res: Response, next: NextFunction) =
     });
 }, processImage);
 
+
 router.get('/this-week', getReportsThisWeek);
 router.get('/total-this-week', getTotalReportsThisWeek);
 
