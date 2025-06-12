@@ -13,6 +13,7 @@
     "proxy_frontend"
   ],
   "dependencies": {
+    "@huggingface/inference": "^4.0.4",
     "uuid": "^11.1.0"
   }
 }
