@@ -11,5 +11,8 @@
   "workspaces": [
     "api",
     "proxy_frontend"
-  ]
+  ],
+  "dependencies": {
+    "uuid": "^11.1.0"
+  }
 }

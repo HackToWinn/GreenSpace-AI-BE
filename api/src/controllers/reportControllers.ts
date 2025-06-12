@@ -3,6 +3,9 @@ import * as fs from 'fs';
 import * as w3up from '@web3-storage/w3up-client';
 import * as multer from 'multer';
 import 'dotenv/config';
+import useActor from '../hooks/useActor';
+import { randomUUID } from 'crypto';
+
 
 interface MulterRequest extends Request {
     file?: Express.Multer.File;
@@ -214,6 +217,18 @@ Please write a detailed, descriptive paragraph that paints a clear picture of th
             category: categoryAnalysis,
             timestamp: new Date().toISOString()
         });
+
+        const Actor = useActor();
+
+        const reportId = BigInt(Date.now());
+
+        Actor.addReport(randomUUID.toString(), {
+          id: reportId,
+          timestamp: new Date().toISOString(),
+          user: req.body.user,
+          category: categoryAnalysis,
+          description: description,  
+        })
 
     } catch (error) {
         console.error('Error processing image:', error);
