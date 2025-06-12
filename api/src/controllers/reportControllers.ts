@@ -116,7 +116,7 @@ export const storeImageToIPFSWithHelper = async (file: File, filePath: string, r
 }
 export const fetchAllReports = async (req: Request, res: Response) => {
     try {
-        const Actor = useActor();
+        const Actor = await useActor();
         const reports = await Actor.fetchAllValidReport();
         
         res.json({
@@ -134,7 +134,7 @@ export const fetchAllReports = async (req: Request, res: Response) => {
 
 export const getReportsThisWeek = async (req: Request, res: Response) => {
     try {
-        const Actor = useActor();
+        const Actor = await useActor();
         const reportsThisWeek = await Actor.getReportsThisWeek();
         res.json({
             success: true,
@@ -151,8 +151,8 @@ export const getReportsThisWeek = async (req: Request, res: Response) => {
 
 export const getTotalReportsThisWeek = async (req: Request, res: Response) => {
     try {
-        const Actor = useActor();
-        const totalReportsThisWeek = await Actor.getReportsThisWeek();
+        const Actor = await useActor();
+        const totalReportsThisWeek = await (Actor).getReportsThisWeek();
         
         res.json({
             success: true,
