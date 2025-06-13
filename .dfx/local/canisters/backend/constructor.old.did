@@ -1,0 +1,30 @@
+type UserId = principal;
+type Time = int;
+type Report = 
+ record {
+   category: text;
+   confidence: text;
+   coordinates: Location;
+   description: text;
+   id: text;
+   imageCid: text;
+   location: text;
+   presentage_confidence: text;
+   rewardGiven: opt nat;
+   status: text;
+   timestamp: Time;
+   user: UserId;
+ };
+type Location = 
+ record {
+   latitude: float64;
+   longitude: float64;
+ };
+service : {
+  addReport: (text, Report) -> ();
+  fetchAllValidReport: () -> (vec Report);
+  getReport: (text) -> (opt Report);
+  getReportsThisWeek: () -> (vec Report);
+  getTotalReports: () -> (nat);
+  getTotalReportsThisWeek: () -> (nat);
+}

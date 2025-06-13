@@ -4,11 +4,13 @@
       "main": "backend/app.mo",
       "type": "motoko",
       "args": "--enhanced-orthogonal-persistence",
-      "build": ""
+      "build": "",
+      "declarations": {
+        "output": "api/src/declarations/backend"
+      }
     }
   },
-
-  "output_env_file": ".env",
+  "output_env_file": "api/.env",
   "defaults": {
     "build": {
       "packtool": "mops sources"

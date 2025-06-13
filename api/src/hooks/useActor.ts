@@ -1,8 +1,12 @@
 import { Principal } from '@web3-storage/w3up-client/dist/src/types';
-import { canisterId, createActor } from '../../../src/declarations/backend';
 import { Identity } from '@dfinity/agent';
+import { canisterId, createActor } from '../declarations/backend';
 
-export default function useActor() {
-  const actor = createActor(canisterId);
+export default async function useActor() {
+  const actor = createActor(canisterId, {
+    agentOptions: {
+      host:  'http://127.0.0.1:4943',
+    },
+  });
   return actor;
 }

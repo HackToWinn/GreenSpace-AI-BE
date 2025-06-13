@@ -1,14 +1,13 @@
-import express, { NextFunction } from "express";
 import dotenv from "dotenv";
+import path from 'path';
+import express, { NextFunction } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { Request, Response } from "express";
-import path from 'path';
 import userRoutes from './routes/userRoutes'
 import reportRoutes from './routes/reportRoutes'
 
 dotenv.config(); 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = express();
 const PORT = process.env.EXPRESS_PORT|| 3001;

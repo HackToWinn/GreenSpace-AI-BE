@@ -8,26 +8,17 @@ public type Location = {
   longitude: Float;
 };
 public type Report = {
-  id: Nat;
-  user: UserId;
-  category: Text;
+  id: Text;
+    user: ?UserId;
+     category: Text;
   description: Text;
+  confidence: Text;
+  presentage_confidence: Text;
   location: Text;
   coordinates: Location;
   imageCid: Text;
   timestamp: Time.Time;
   status: Text;
-  rewardGiven: ?Nat;
+  rewardGiven: ?Float;
 };
-public type Reputation = {
-  totalReports: Nat;
-  verifiedReports: Nat;
-  score: Float; 
-};
-public type AIValidationInput = {
-  reportId: Nat;
-  isValid: Bool;
-  confidence: Float;
-};
-
 };

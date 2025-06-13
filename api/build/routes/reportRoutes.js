@@ -73,7 +73,6 @@ const upload = (0, multer_1.default)({
 const router = (0, express_1.Router)();
 router.get('/', reportControllers_1.getReports);
 router.post('/image-upload', (req, res, next) => {
-    console.log('POST /image-upload route hit'); // Debug log
     upload.single('image')(req, res, (err) => {
         if (err instanceof multer_1.default.MulterError) {
             if (err.code === 'LIMIT_FILE_SIZE') {
@@ -87,4 +86,6 @@ router.post('/image-upload', (req, res, next) => {
         next();
     });
 }, reportControllers_1.processImage);
+router.get('/this-week', reportControllers_1.getReportsThisWeek);
+router.get('/total-this-week', reportControllers_1.getTotalReportsThisWeek);
 exports.default = router;
