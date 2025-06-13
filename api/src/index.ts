@@ -1,9 +1,9 @@
-import express, { NextFunction } from "express";
 import dotenv from "dotenv";
+import path from 'path';
+import express, { NextFunction } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { Request, Response } from "express";
-import path from 'path';
 import userRoutes from './routes/userRoutes'
 import reportRoutes from './routes/reportRoutes'
 

@@ -6,7 +6,7 @@ export const idlFactory = ({ IDL }) => {
     'longitude' : IDL.Float64,
   });
   const Report = IDL.Record({
-    'id' : IDL.Nat,
+    'id' : IDL.Text,
     'status' : IDL.Text,
     'user' : UserId,
     'description' : IDL.Text,
@@ -14,6 +14,8 @@ export const idlFactory = ({ IDL }) => {
     'rewardGiven' : IDL.Opt(IDL.Nat),
     'timestamp' : Time,
     'category' : IDL.Text,
+    'presentage_confidence' : IDL.Text,
+    'confidence' : IDL.Text,
     'location' : IDL.Text,
     'coordinates' : Location,
   });
