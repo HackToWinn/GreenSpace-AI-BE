@@ -40,8 +40,6 @@ const router = Router();
 router.get('/', getReports);
 
 router.post('/image-upload', (req: Request, res: Response, next: NextFunction) => {
-    console.log('POST /image-upload route hit'); // Debug log
-    
     upload.single('image')(req, res, (err: any) => {
         if (err instanceof multer.MulterError) {
             if (err.code === 'LIMIT_FILE_SIZE') {
