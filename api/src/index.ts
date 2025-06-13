@@ -8,7 +8,6 @@ import userRoutes from './routes/userRoutes'
 import reportRoutes from './routes/reportRoutes'
 
 dotenv.config(); 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = express();
 const PORT = process.env.EXPRESS_PORT|| 3001;

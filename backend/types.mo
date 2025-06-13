@@ -9,8 +9,8 @@ public type Location = {
 };
 public type Report = {
   id: Text;
-  user: UserId;
-  category: Text;
+    user: ?UserId;
+     category: Text;
   description: Text;
   confidence: Text;
   presentage_confidence: Text;
@@ -19,17 +19,6 @@ public type Report = {
   imageCid: Text;
   timestamp: Time.Time;
   status: Text;
-  rewardGiven: ?Nat;
+  rewardGiven: ?Float;
 };
-public type Reputation = {
-  totalReports: Nat;
-  verifiedReports: Nat;
-  score: Float; 
-};
-public type AIValidationInput = {
-  reportId: Nat;
-  isValid: Bool;
-  confidence: Float;
-};
-
 };
