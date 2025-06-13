@@ -4,6 +4,7 @@ import 'dotenv/config';
 import useActor from '../hooks/useActor';
 import { AzureKeyCredential } from '@azure/core-auth';
 import ImageAnalysisClient, { isUnexpected } from '@azure-rest/ai-vision-image-analysis';
+import Groq from 'groq-sdk';
 
 
 export const getReports = (req: Request, res: Response) => {
@@ -169,155 +170,31 @@ export const processImage = async (req: Request, res: Response) => {
         return;
     }
 
-
+    const location: string = req.body.location || 'Balikpapan';
     const filePath: string = req.file.path;
 
     if (!fs.existsSync(filePath)) {
         res.status(400).json({ error: 'File not found' });
         return;
     }
+    const weatherData = await fetch(`${process.env.WEATHER_API_URL!}/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.WEATHER_API_KEY}`
+        },
+    });
+    const weatherResponse = await weatherData.json();
 
     try {
         const fileBuffer: Buffer = fs.readFileSync(filePath);
         const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
         const credential = new AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY!);
         const endpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT!;
-
         const client = ImageAnalysisClient(endpoint, credential);
-        
+    
         const result = await client.path("/imageanalysis:analyze").post({
             body: fileBuffer,
-<<<<<<< HEAD
-        });
-
-        if (!captionResponse.ok) {
-            throw new Error(`BLIP API error: ${captionResponse.status}`);
-        }
-
-        const captionResult = await captionResponse.json();
-        const caption = captionResult[0]?.generated_text || 'No caption generated';
-
-        console.log('Image caption:', caption);
-
-        // Combined comprehensive analysis using single Zephyr API call
-        const comprehensivePrompt = `Based on this image description: "${caption}", provide a comprehensive analysis in the following structured format:
-
-**DETAILED_DESCRIPTION:**
-[Provide a detailed description of what is shown in the image, including visual elements, environmental conditions, structural details, people/activities, atmospheric conditions, and overall scene composition]
-
-**DISASTER_ANALYSIS:**
-[Analyze if this shows signs of a natural disaster and predict potential consequences including: type of disaster, potential secondary disasters, risk assessment, immediate concerns, and long-term implications]
-
-**CATEGORY:**
-[Classify into one category: FLOOD, FIRE, EARTHQUAKE, STORM, LANDSLIDE, DROUGHT, VOLCANIC, or NONE]
-
-**CONFIDENCE:**
-[Provide confidence score as percentage 0-100%]
-
-**REASONING:**
-[Brief explanation for the categorization]
-
-Please be specific, factual, and ensure each section is clearly marked with the exact headers shown above.`;
-
-        const comprehensiveResponse = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inputs: comprehensivePrompt,
-                parameters: {
-                    max_new_tokens: 800,
-                    temperature: 0.5,
-                    do_sample: true,
-                    top_p: 0.9
-                }
-            }),
-        });
-
-        if (!comprehensiveResponse.ok) {
-            throw new Error(`Comprehensive analysis API error: ${comprehensiveResponse.status}`);
-        }
-
-        const comprehensiveResult = await comprehensiveResponse.json();
-        const fullAnalysis = comprehensiveResult[0]?.generated_text || 'No analysis generated';
-
-        console.log('Comprehensive analysis:', fullAnalysis);
-
-        // Parse the structured response
-        const parseAnalysis = (text: string) => {
-            const sections = {
-                description: 'No detailed description generated',
-                analysis: 'No disaster analysis generated',
-                category: 'NONE',
-                confidence: '0',
-                reasoning: 'Unable to analyze'
-            };
-
-            try {
-                // Extract detailed description
-                const descMatch = text.match(/\*\*DETAILED_DESCRIPTION:\*\*\s*([\s\S]*?)(?=\*\*DISASTER_ANALYSIS:\*\*|$)/i);
-                if (descMatch) sections.description = descMatch[1].trim();
-
-                // Extract disaster analysis
-                const analysisMatch = text.match(/\*\*DISASTER_ANALYSIS:\*\*\s*([\s\S]*?)(?=\*\*CATEGORY:\*\*|$)/i);
-                if (analysisMatch) sections.analysis = analysisMatch[1].trim();
-
-                // Extract category
-                const categoryMatch = text.match(/\*\*CATEGORY:\*\*\s*([A-Z]+)/i);
-                if (categoryMatch) sections.category = categoryMatch[1].trim();
-
-                // Extract confidence
-                const confidenceMatch = text.match(/\*\*CONFIDENCE:\*\*\s*(\d+)%?/i);
-                if (confidenceMatch) sections.confidence = confidenceMatch[1].trim();
-
-                // Extract reasoning
-                const reasoningMatch = text.match(/\*\*REASONING:\*\*\s*([\s\S]*?)$/i);
-                if (reasoningMatch) sections.reasoning = reasoningMatch[1].trim();
-
-            } catch (parseError) {
-                console.error('Error parsing analysis:', parseError);
-            }
-
-            return sections;
-        };
-
-        const parsedAnalysis = parseAnalysis(fullAnalysis);
-
-        // Format category analysis for consistency
-        const categoryAnalysis = `Category: ${parsedAnalysis.category}\nConfidence: ${parsedAnalysis.confidence}%\nReasoning: ${parsedAnalysis.reasoning}`;
-
-        console.log('Parsed analysis:', parsedAnalysis);
-
-        const file = new File([fileBuffer], req.file.originalname);
-
-        // Store to IPFS with parsed analysis data
-        const cid = await storeImageToIPFS(file, filePath, req, res, {
-            description: parsedAnalysis.description,
-            analysis: parsedAnalysis.analysis,
-            category: categoryAnalysis,
-            timestamp: new Date().toISOString()
-        });
-
-        const Actor = await useActor();
-
-        await Actor.addReport(randomUUID.toString(), {
-            id: randomUUID.toString(),
-            user: req.body.user,
-            category: categoryAnalysis,
-            description: parsedAnalysis.description,
-            location: req.body.location,
-            coordinates: req.body.coordinates,
-            status: 'pending',
-            imageCid: cid,
-            timestamp: new Date(),
-            rewardGiven: [],
-        });
-
-        res.json({
-            status: 'success',
-=======
             queryParameters: {
                 features: features,
                 "smartCrops-aspect-ratios": [0.9, 1.33],
@@ -328,11 +205,78 @@ Please be specific, factual, and ensure each section is clearly marked with the 
         if (isUnexpected(result)) {
             throw new Error(`Analysis failed: ${result.body.error?.message}`);
         }
+        const groq = new Groq({apiKey: process.env.GROQ_API_KEY!});
+        const analysis = await groq.chat.completions.create({
+            model: 'gemma2-9b-it',
+            messages: [
+                {
+                    role: 'system',
+                    content: "You are an expert in disaster prediction. Provide concise and insightful additions to caption-based disaster analysis.",
+                },
+                {
+                    role: 'user',
+                    content: `
+                    given caption data : ${JSON.stringify(result.body)} and weather data: ${JSON.stringify(weatherResponse)},
+                                Detect the primary disaster condition from these categories:
+                                Fire, Flood, Earthquake, Storm, Drought, Landslide, Air Pollution, Normal.
+                                Scoring criteria:
+                                Caption keywords scoring:
+                                Fire, Flood, Earthquake, Landslide: 3 points per keyword match.
+                                Storm, Drought, Air Pollution, Normal: 2 points per keyword match.
+                                Visual cues scoring:
+                                Fire: High red dominance (>0.4, +2), high brightness (>120, +1), high contrast (>50, +1).
+                                Flood: High blue dominance (>0.35, +2), low brightness (<100, +1).
+                                Earthquake: High contrast (>60, +1).
+                                Drought: High brightness (>150, +1), high red dominance (>0.3) with low blue dominance (<0.2, +1).
+                                Air Pollution: Low brightness (<120) & low contrast (<30, +2), low color variance (<20, +2), low sharpness (<100, +1), caption contains "gray"/"grey" (+1).
+                                Normal: Moderate brightness (100-200, +1), moderate contrast (30-80, +1), high green dominance (>0.3, +2), moderate blue (>0.25) & low red dominance (<0.35, +1), high color variance (>30, +1), high sharpness (>200, +1).
+                                Determine:
+                                primary_disaster: Condition with the highest score.
+                                confidence level:
+                                Normal: High (≥4), Medium (≥2), Low (≥1), Undetected (<1).
+                                Other disasters: High (≥5), Medium (≥3), Low (≥1), Undetected (<1).
+                                air_quality:
+                                Poor (≥3 Air Pollution points)
+                                Moderate (≥1 Air Pollution point)
+                                Excellent (Brightness >150 & Color Variance >40)
+                                Good (otherwise)
+                                Provide the output strictly as the following JSON format:
+                                {
+                                "primary_disaster": "...",
+                                "confidence": "...",
+                                "all_scores": {
+                                    "fire": ...,
+                                    "flood": ...,
+                                    "earthquake": ...,
+                                    "landslide": ...,
+                                    "storm": ...,
+                                    "drought": ...,
+                                    "air_pollution": ...,
+                                    "normal": ...
+                                },
+                                "air_quality": "...",
+                                "visual_analysis": {
+                                    "red_dominance": "...",
+                                    "blue_dominance": "...",
+                                    "green_dominance": "...",
+                                    "brightness": "...",
+                                    "contrast": "...",
+                                    "color_variance": "...",
+                                    "sharpness": "..."
+                                }
+                                }
+                                Note: Provide all numeric values formatted neatly with appropriate precision.`
+                }
+            ],
+            temperature: 0.7,
+            max_completion_tokens:500,
+            stream: false,
+            top_p: 0.9,
+        });
 
         res.json({
             status: 'success',
-            analysis: result.body
->>>>>>> e32e3b7c3747a6f614db0c46ef75fac66fd3f9d2
+            analysis: analysis.choices[0]?.message?.content || ""
         });
 
     } catch (error) {
