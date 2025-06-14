@@ -20,6 +20,8 @@ jobs:
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
         run: dfx --version
+      - name: Install mops 
+        run: npm install -g mops
       - name: Install mops dependencies
         run: mops install
       - name: Build Motoko canister
