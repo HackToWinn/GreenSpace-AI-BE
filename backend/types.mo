@@ -3,6 +3,13 @@ import Time "mo:base/Time";
 import Principal "mo:base/Principal";
 module {
 public type UserId = Principal;
+public type User = {
+  id: UserId;
+  username: Text;
+  email: Text;
+  walletAddress: Text;
+  joinedAt: Time.Time;
+};
 public type Location = {
   latitude: Float;
   longitude: Float;

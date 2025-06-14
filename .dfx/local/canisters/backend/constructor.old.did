@@ -10,10 +10,10 @@ type Report =
    imageCid: text;
    location: text;
    presentage_confidence: text;
-   rewardGiven: opt nat;
+   rewardGiven: opt float64;
    status: text;
    timestamp: Time;
-   user: UserId;
+   user: opt UserId;
  };
 type Location = 
  record {

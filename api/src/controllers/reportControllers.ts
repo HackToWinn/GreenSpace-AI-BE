@@ -44,6 +44,19 @@ export const getAllReports = async (req: Request, res: Response) => {
         });
     }
 };
+export const getTotalReports = async (req: Request, res: Response) => {
+    try {
+        const Actor = await useActor();
+        const reports = await Actor.getTotalReports();        
+        res.json({
+            success: true,
+            reports: reports
+        });
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+    
+    }
+};
 
 export const getReportsThisWeek = async (req: Request, res: Response) => {
     try {
