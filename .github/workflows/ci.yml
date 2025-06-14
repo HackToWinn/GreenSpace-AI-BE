@@ -25,7 +25,7 @@ jobs:
       - name: Confirm successful installation
         run: dfx --version
       - name: Install mops 
-        run: npm install -g mops
+        run: npm install -g ic-mops
       - name: Install mops dependencies
         run: mops install
       - name: Build Motoko canister
