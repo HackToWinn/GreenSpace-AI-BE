@@ -31,10 +31,10 @@ jobs:
       - name: Run DFX commands
         run: |
           dfx start --background --clean
-      - name: Build Motoko canister
-        run: dfx build
       - name: Deploy Motoko canister
         run: dfx deploy 
+      - name: Build Motoko canister
+        run: dfx build
 
   api-node:
     name: Build & Test API (Express)
