@@ -28,6 +28,9 @@ jobs:
         run: npm install -g ic-mops
       - name: Install mops dependencies
         run: mops install
+      - name: Run DFX commands
+        run: |
+          dfx start --background --clean
       - name: Build Motoko canister
         run: dfx build
       - name: Deploy Motoko canister
