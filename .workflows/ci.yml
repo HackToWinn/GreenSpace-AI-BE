@@ -1,0 +1,67 @@
+name: Monorepo CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  backend-motoko:
+    name: Build & Test Motoko Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install DFX
+        run: |
+          sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+          echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Install mops dependencies
+        run: mops install
+      - name: Build Motoko canister
+        run: dfx build
+      - name: Deploy Motoko canister
+        run: dfx deploy 
+
+  api-node:
+    name: Build & Test API (Express)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test 
+      - name: Build
+        run: npm run build 
+
+  proxy-frontend:
+    name: Build & Test Frontend (React/Vue)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./proxy_frontend
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test 
+      - name: Build
+        run: npm run build
+

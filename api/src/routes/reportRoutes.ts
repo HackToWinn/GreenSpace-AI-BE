@@ -1,5 +1,5 @@
 import { Router,  } from 'express';
-import { getReports, processImage, getReportsThisWeek, getTotalReportsThisWeek, getAllReports } from '../controllers/reportControllers';
+import { getReports, processImage, getReportsThisWeek, getTotalReportsThisWeek, getAllReports, getTotalReports } from '../controllers/reportControllers';
 import multer from 'multer';
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -18,5 +18,6 @@ router.get('/' , getAllReports);
 router.post('/image-upload', upload.single('image'), processImage);
 router.get('/this-week', getReportsThisWeek);
 router.get('/total-this-week', getTotalReportsThisWeek);
+router.get('/total-report', getTotalReports);
 
 export default router;

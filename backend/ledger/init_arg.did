@@ -1,0 +1,19 @@
+(record {
+  token_name = "GreenSpace Token";
+  token_symbol = "GSP";
+  decimals = 8;
+  transfer_fee = 0;
+  minting_account = record {
+    owner = principal "3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe";
+    subaccount = null;
+  };
+  initial_mints = vec {
+    record {
+      account = record {
+        owner = principal "3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe";
+        subaccount = null;
+      };
+      amount = 1000000;
+    }
+  };
+})

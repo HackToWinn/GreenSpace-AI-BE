@@ -8,6 +8,11 @@
       "declarations": {
         "output": "api/src/declarations/backend"
       }
+    },
+    "icrc1": {
+      "type": "motoko",
+      "main": "backend/ledger/main.mo",
+      "init_arg_file": "backend/ledger/init_arg.did"
     }
   },
   "output_env_file": "api/.env",

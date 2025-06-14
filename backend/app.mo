@@ -61,4 +61,6 @@ actor {
     public func getTotalReports(): async Nat {
       return BTree.size(reports);
     };
+
+  
 }

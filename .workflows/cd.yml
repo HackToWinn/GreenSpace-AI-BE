@@ -1,0 +1,43 @@
+name: Monorepo CD to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-api:
+    name: Deploy API (Express/Node) ke VPS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy API via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/GreenSpace-API-BE/api
+            git pull
+            npm install
+            pm2 restart api-greenspace# Ganti dengan proses manager yang kamu pakai
+
+  deploy-frontend:
+    name: Deploy Frontend ke VPS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy Frontend via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/GreenSpace-API-BE/proxy_frontend
+            git pull origin main
+            npm install
+            npm run build
+
