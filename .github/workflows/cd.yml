@@ -22,7 +22,7 @@ jobs:
             cd /var/www/GreenSpace-AI-BE/api
             git pull
             npm install
-            pm2 restart api-greenspace# Ganti dengan proses manager yang kamu pakai
+            pm2 restart api-greenspace
 
   deploy-frontend:
     name: Deploy Frontend ke VPS
