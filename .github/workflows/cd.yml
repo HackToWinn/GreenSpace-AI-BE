@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/GreenSpace-API-BE/api
+            cd /var/www/GreenSpace-AI-BE/api
             git pull
             npm install
             pm2 restart api-greenspace# Ganti dengan proses manager yang kamu pakai
@@ -36,7 +36,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/GreenSpace-API-BE/proxy_frontend
+            cd /var/www/GreenSpace-AI-BE/proxy_frontend
             git pull origin main
             npm install
             npm run build
