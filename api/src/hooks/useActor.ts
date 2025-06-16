@@ -1,9 +1,8 @@
-import { Principal } from '@web3-storage/w3up-client/dist/src/types';
-import { Identity } from '@dfinity/agent';
-import { canisterId, createActor } from '../declarations/backend';
+import { canisterId as backendCanister, createActor  } from '../../../src/declarations/backend';
+import { canisterId as tokenCanister} from '../../../src/declarations/icrc1';
 
-export default async function useActor() {
-  const actor = createActor(canisterId, {
+export default async function useActor({type}: {type: 'Backend' | 'Token'}) {
+  const actor = createActor(type === 'Backend' ? backendCanister : tokenCanister, {
     agentOptions: {
       host:  'http://127.0.0.1:4943',
     },

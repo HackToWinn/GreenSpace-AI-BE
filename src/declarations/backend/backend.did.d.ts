@@ -6,10 +6,10 @@ export interface Location { 'latitude' : number, 'longitude' : number }
 export interface Report {
   'id' : string,
   'status' : string,
-  'user' : UserId,
+  'user' : [] | [UserId],
   'description' : string,
   'imageCid' : string,
-  'rewardGiven' : [] | [bigint],
+  'rewardGiven' : [] | [number],
   'timestamp' : Time,
   'category' : string,
   'presentage_confidence' : string,
@@ -21,11 +21,9 @@ export type Time = bigint;
 export type UserId = Principal;
 export interface _SERVICE {
   'addReport' : ActorMethod<[string, Report], undefined>,
-  'fetchAllValidReport' : ActorMethod<[], Array<Report>>,
   'getReport' : ActorMethod<[string], [] | [Report]>,
   'getReportsThisWeek' : ActorMethod<[], Array<Report>>,
-  'getTotalReports' : ActorMethod<[], bigint>,
-  'getTotalReportsThisWeek' : ActorMethod<[], bigint>,
+  'getValidReports' : ActorMethod<[], Array<Report>>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

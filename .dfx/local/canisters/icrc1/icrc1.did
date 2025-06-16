@@ -56,7 +56,7 @@ type Result =
 type Memo = blob;
 type Ledger = 
  service {
-   icrc1_balance_of: (account: Account) -> (Tokens) query;
+   icrc1_balance_of: (Account) -> (Tokens) query;
    icrc1_decimals: () -> (nat8) query;
    icrc1_fee: () -> (nat) query;
    icrc1_metadata: () -> (vec record {
@@ -132,24 +132,22 @@ type Account =
    owner: principal;
    subaccount: opt Subaccount;
  };
-service : (init: record {
-                   decimals: nat8;
-                   initial_mints:
-                    vec
-                     record {
-                       account:
-                        record {
-                          owner: principal;
-                          subaccount: opt blob;
-                        };
-                       amount: nat;
-                     };
-                   minting_account:
-                    record {
-                      owner: principal;
-                      subaccount: opt blob;
-                    };
-                   token_name: text;
-                   token_symbol: text;
-                   transfer_fee: nat;
-                 }) -> Ledger
+service : (record {
+             decimals: nat8;
+             initial_mints:
+              vec
+               record {
+                 account: record {
+                            owner: principal;
+                            subaccount: opt blob;
+                          };
+                 amount: nat;
+               };
+             minting_account: record {
+                                owner: principal;
+                                subaccount: opt blob;
+                              };
+             token_name: text;
+             token_symbol: text;
+             transfer_fee: nat;
+           }) -> Ledger

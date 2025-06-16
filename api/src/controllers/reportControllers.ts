@@ -27,7 +27,7 @@ export const storeImageToIPFS = async (file: File, req: Request, res: Response) 
 
 export const getValidReports = async (req: Request, res: Response) => {
     try {
-        const Actor = await useActor();
+        const Actor = await useActor({type: 'Backend'});
         const reports = await Actor.getValidReports();        
         res.json({
             success: true,
@@ -46,7 +46,7 @@ export const getValidReports = async (req: Request, res: Response) => {
 
 export const getReportsThisWeek = async (req: Request, res: Response) => {
     try {
-        const Actor = await useActor();
+        const Actor = await useActor({type: 'Backend'});
         const reportsThisWeek = await Actor.getReportsThisWeek();
         res.json({
             success: true,
@@ -63,7 +63,7 @@ export const getReportsThisWeek = async (req: Request, res: Response) => {
 
 export const getTotalReportsThisWeek = async (req: Request, res: Response) => {
     try {
-        const Actor = await useActor();
+        const Actor = await useActor({type: 'Backend'});
         const totalReportsThisWeek = await Actor.getReportsThisWeek();
         
         res.json({
@@ -89,7 +89,7 @@ export const processImage = async (req: Request, res: Response) => {
     const file = req.file.buffer;
     const location: string = req.body.location || 'Balikpapan';
     const repId = "rep-" + randomUUID().toString();
-    const Actor = await useActor();
+    const Actor = await useActor({type: 'Backend'});
     const groq = new Groq({apiKey: process.env.GROQ_API_KEY!});
     const fileObj = new File([file], req.file.originalname || 'image', { 
         type: req.file.mimetype || 'image/jpeg' 

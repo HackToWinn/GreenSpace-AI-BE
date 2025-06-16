@@ -8,10 +8,10 @@ export const idlFactory = ({ IDL }) => {
   const Report = IDL.Record({
     'id' : IDL.Text,
     'status' : IDL.Text,
-    'user' : UserId,
+    'user' : IDL.Opt(UserId),
     'description' : IDL.Text,
     'imageCid' : IDL.Text,
-    'rewardGiven' : IDL.Opt(IDL.Nat),
+    'rewardGiven' : IDL.Opt(IDL.Float64),
     'timestamp' : Time,
     'category' : IDL.Text,
     'presentage_confidence' : IDL.Text,
@@ -21,11 +21,9 @@ export const idlFactory = ({ IDL }) => {
   });
   return IDL.Service({
     'addReport' : IDL.Func([IDL.Text, Report], [], []),
-    'fetchAllValidReport' : IDL.Func([], [IDL.Vec(Report)], []),
     'getReport' : IDL.Func([IDL.Text], [IDL.Opt(Report)], []),
     'getReportsThisWeek' : IDL.Func([], [IDL.Vec(Report)], []),
-    'getTotalReports' : IDL.Func([], [IDL.Nat], []),
-    'getTotalReportsThisWeek' : IDL.Func([], [IDL.Nat], []),
+    'getValidReports' : IDL.Func([], [IDL.Vec(Report)], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

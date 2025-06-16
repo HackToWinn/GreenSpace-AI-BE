@@ -3,11 +3,7 @@
     "backend": {
       "main": "backend/app.mo",
       "type": "motoko",
-      "args": "--enhanced-orthogonal-persistence",
-      "build": "",
-      "declarations": {
-        "output": "api/src/declarations/backend"
-      }
+      "args": "--enhanced-orthogonal-persistence"
     },
     "icrc1": {
       "type": "motoko",
