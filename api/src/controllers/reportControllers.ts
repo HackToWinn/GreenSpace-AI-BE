@@ -143,7 +143,7 @@ export const processImage = async (req: Request, res: Response) => {
             Provide the output strictly as the following JSON format:
             {
                 "image_status": "valid/invalid",
-                "confidence": "High/Medium/Low",
+                "confidence": "High/Medium/Low/None",
                 "presentage_confidence": "90%",
                 "category": "Fire/Flood/Earthquake/Storm/Drought/Landslide/Air Pollution/Normal/Etc",
                 "description": "Detailed description of the analysis",
@@ -151,7 +151,7 @@ export const processImage = async (req: Request, res: Response) => {
             
             First Note: Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
             
-            Second Note: If image_status is "invalid", set confidence to "Low", presentage_confidence to "0%", category to "Invalid Image", and explain why the image is invalid in the description. Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
+            Second Note: If image_status is "invalid", set confidence to "None", presentage_confidence to "0%", category to "Invalid Image", and explain why the image is invalid in the description. Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
         `;
 
         const analysis = await groq.chat.completions.create({
@@ -173,7 +173,6 @@ export const processImage = async (req: Request, res: Response) => {
         });
         const analysisResult = analysis.choices[0].message.content;
         const parsedAnalysis = JSON.parse(analysisResult || '{}');
-
         Actor.addReport(repId, {
             id: repId,
             user: req.body.user || [],
