@@ -1,22 +1,22 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
+        desc = { enumerable: true, get: function () { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
+}) : (function (o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
+}) : function (o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
+    var ownKeys = function (o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
             for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
@@ -45,46 +45,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processImage = exports.getTotalReportsThisWeek = exports.getReportsThisWeek = exports.fetchAllReports = exports.storeImageToIPFSWithHelper = exports.initW3StorageClient = exports.storeImageToIPFS = exports.getReports = void 0;
-const fs = __importStar(require("fs"));
+exports.processImage = exports.getTotalReportsThisWeek = exports.getReportsThisWeek = exports.getValidReports = exports.storeImageToIPFS = void 0;
 require("dotenv/config");
 const useActor_1 = __importDefault(require("../hooks/useActor"));
 const core_auth_1 = require("@azure/core-auth");
 const ai_vision_image_analysis_1 = __importStar(require("@azure-rest/ai-vision-image-analysis"));
 const groq_sdk_1 = __importDefault(require("groq-sdk"));
-const getReports = (req, res) => {
-    res.send('Data Rep');
-};
-exports.getReports = getReports;
-const storeImageToIPFS = (file, filePath, req, res, analysisResult) => __awaiter(void 0, void 0, void 0, function* () {
+const crypto_1 = require("crypto");
+const w3up = __importStar(require("@web3-storage/w3up-client"));
+const sanitize_1 = require("../utils/sanitize");
+const storeImageToIPFS = (file, req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Dynamic import untuk ESM module
-        const w3up = yield Promise.resolve().then(() => __importStar(require('@web3-storage/w3up-client')));
         const client = yield w3up.create();
         yield client.login(process.env.WEB3_STORAGE_EMAIL);
         yield client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY}`);
         const cid = yield client.uploadFile(file);
-        // Hapus file setelah upload berhasil
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-        res.json({
-            success: true,
-            cid: cid.toString(),
-            url: `https://w3s.link/ipfs/${cid}`,
-            analysisResult
-        });
+        return cid;
     }
     catch (error) {
-        console.error('Error in storeImageToIPFS:', error);
-        // Cleanup file jika terjadi error
-        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        // Cleanup file dari parameter jika berbeda
-        if (filePath && fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
         res.status(500).json({
             error: 'Failed to store image',
             details: error.message
@@ -92,58 +70,13 @@ const storeImageToIPFS = (file, filePath, req, res, analysisResult) => __awaiter
     }
 });
 exports.storeImageToIPFS = storeImageToIPFS;
-// Fungsi helper untuk inisialisasi w3up client (opsional)
-const initW3StorageClient = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const w3up = yield Promise.resolve().then(() => __importStar(require('@web3-storage/w3up-client')));
-        const client = yield w3up.create();
-        yield client.login(process.env.WEB3_STORAGE_EMAIL);
-        yield client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY}`);
-        return client;
-    }
-    catch (error) {
-        console.error('Failed to initialize w3up client:', error);
-        throw error;
-    }
-});
-exports.initW3StorageClient = initW3StorageClient;
-// Alternatif fungsi storeImageToIPFS yang menggunakan helper
-const storeImageToIPFSWithHelper = (file, filePath, req, res, analysisResult) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const client = yield (0, exports.initW3StorageClient)();
-        const cid = yield client.uploadFile(file);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-        res.json({
-            success: true,
-            cid: cid.toString(),
-            url: `https://w3s.link/ipfs/${cid}`,
-            analysisResult
-        });
-    }
-    catch (error) {
-        console.error('Error in storeImageToIPFS:', error);
-        if (req.file && req.file.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
-        if (filePath && fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-        res.status(500).json({
-            error: 'Failed to store image',
-            details: error.message
-        });
-    }
-});
-exports.storeImageToIPFSWithHelper = storeImageToIPFSWithHelper;
-const fetchAllReports = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getValidReports = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const Actor = yield (0, useActor_1.default)();
-        const reports = yield Actor.fetchAllValidReport();
+        const reports = yield Actor.getValidReports();
         res.json({
             success: true,
-            reports: reports
+            reports: (0, sanitize_1.sanitize)(reports)
         });
     }
     catch (error) {
@@ -154,14 +87,14 @@ const fetchAllReports = (req, res) => __awaiter(void 0, void 0, void 0, function
         });
     }
 });
-exports.fetchAllReports = fetchAllReports;
+exports.getValidReports = getValidReports;
 const getReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const Actor = yield (0, useActor_1.default)();
         const reportsThisWeek = yield Actor.getReportsThisWeek();
         res.json({
             success: true,
-            reports: reportsThisWeek
+            reports: (0, sanitize_1.sanitize)(reportsThisWeek)
         });
     }
     catch (error) {
@@ -176,10 +109,10 @@ exports.getReportsThisWeek = getReportsThisWeek;
 const getTotalReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const Actor = yield (0, useActor_1.default)();
-        const totalReportsThisWeek = yield (Actor).getReportsThisWeek();
+        const totalReportsThisWeek = yield Actor.getReportsThisWeek();
         res.json({
             success: true,
-            total: totalReportsThisWeek.toString()
+            total: totalReportsThisWeek
         });
     }
     catch (error) {
@@ -192,17 +125,24 @@ const getTotalReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, 
 });
 exports.getTotalReportsThisWeek = getTotalReportsThisWeek;
 const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _a;
     if (!req.file) {
         res.status(400).json({ error: 'No file uploaded' });
         return;
     }
+    const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
+    const endpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT;
+    const file = req.file.buffer;
     const location = req.body.location || 'Balikpapan';
-    const filePath = req.file.path;
-    if (!fs.existsSync(filePath)) {
-        res.status(400).json({ error: 'File not found' });
-        return;
-    }
+    const repId = "rep-" + (0, crypto_1.randomUUID)().toString();
+    const Actor = yield (0, useActor_1.default)();
+    const groq = new groq_sdk_1.default({ apiKey: process.env.GROQ_API_KEY });
+    const fileObj = new File([file], req.file.originalname || 'image', {
+        type: req.file.mimetype || 'image/jpeg'
+    });
+    const credential = new core_auth_1.AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY);
+    const client = (0, ai_vision_image_analysis_1.default)(endpoint, credential);
+    const cid = yield (0, exports.storeImageToIPFS)(fileObj, req, res);
     const weatherData = yield fetch(`${process.env.WEATHER_API_URL}/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}`, {
         method: 'GET',
         headers: {
@@ -211,13 +151,8 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     });
     const weatherResponse = yield weatherData.json();
     try {
-        const fileBuffer = fs.readFileSync(filePath);
-        const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
-        const credential = new core_auth_1.AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY);
-        const endpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT;
-        const client = (0, ai_vision_image_analysis_1.default)(endpoint, credential);
         const result = yield client.path("/imageanalysis:analyze").post({
-            body: fileBuffer,
+            body: file,
             queryParameters: {
                 features: features,
                 "smartCrops-aspect-ratios": [0.9, 1.33],
@@ -227,81 +162,79 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if ((0, ai_vision_image_analysis_1.isUnexpected)(result)) {
             throw new Error(`Analysis failed: ${(_a = result.body.error) === null || _a === void 0 ? void 0 : _a.message}`);
         }
-        const groq = new groq_sdk_1.default({ apiKey: process.env.GROQ_API_KEY });
+        const PromptRoleSystem = 
+            "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.";
+
+        const PromptRoleUser = `
+            Analyze the following image data and weather information in a step-by-step manner:
+            
+            Image Analysis Data: ${JSON.stringify(result.body)}
+            Weather Data: ${JSON.stringify(weatherResponse)}
+            Location: ${location}
+            
+            - Analyze the location context based on the provided location: ${location}
+            - Consider the current weather conditions from the weather data
+            - Identify geographical and environmental factors that might influence disaster risks
+            - Note any location-specific vulnerabilities or characteristics
+            
+            Validate the Image, Image Validation Requirements:
+            - Check if the image is clear and not blurry
+            - Verify if the image contains relevant environmental/geographical features
+            - Confirm if the image quality is sufficient for disaster analysis
+            - Determine if the image content is appropriate for disaster detection
+            
+            Provide the output strictly as the following JSON format:
+            {
+                "image_status": "valid/invalid",
+                "confidence": "High/Medium/Low",
+                "presentage_confidence": "90%",
+                "category": "Fire/Flood/Earthquake/Storm/Drought/Landslide/Air Pollution/Normal/Etc",
+                "description": "Detailed description of the analysis",
+            }
+            
+            First Note: Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
+            
+            Second Note: If image_status is "invalid", set confidence to "Low", presentage_confidence to "0%", category to "Invalid Image", and explain why the image is invalid in the description. Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
+        `;
+
         const analysis = yield groq.chat.completions.create({
             model: 'gemma2-9b-it',
             messages: [
                 {
                     role: 'system',
-                    content: "You are an expert in disaster prediction. Provide concise and insightful additions to caption-based disaster analysis.",
+                    content: PromptRoleSystem,
                 },
                 {
                     role: 'user',
-                    content: `
-                    given caption data : ${JSON.stringify(result.body)} and weather data: ${JSON.stringify(weatherResponse)},
-                                Detect the primary disaster condition from these categories:
-                                Fire, Flood, Earthquake, Storm, Drought, Landslide, Air Pollution, Normal.
-                                Scoring criteria:
-                                Caption keywords scoring:
-                                Fire, Flood, Earthquake, Landslide: 3 points per keyword match.
-                                Storm, Drought, Air Pollution, Normal: 2 points per keyword match.
-                                Visual cues scoring:
-                                Fire: High red dominance (>0.4, +2), high brightness (>120, +1), high contrast (>50, +1).
-                                Flood: High blue dominance (>0.35, +2), low brightness (<100, +1).
-                                Earthquake: High contrast (>60, +1).
-                                Drought: High brightness (>150, +1), high red dominance (>0.3) with low blue dominance (<0.2, +1).
-                                Air Pollution: Low brightness (<120) & low contrast (<30, +2), low color variance (<20, +2), low sharpness (<100, +1), caption contains "gray"/"grey" (+1).
-                                Normal: Moderate brightness (100-200, +1), moderate contrast (30-80, +1), high green dominance (>0.3, +2), moderate blue (>0.25) & low red dominance (<0.35, +1), high color variance (>30, +1), high sharpness (>200, +1).
-                                Determine:
-                                primary_disaster: Condition with the highest score.
-                                confidence level:
-                                Normal: High (≥4), Medium (≥2), Low (≥1), Undetected (<1).
-                                Other disasters: High (≥5), Medium (≥3), Low (≥1), Undetected (<1).
-                                air_quality:
-                                Poor (≥3 Air Pollution points)
-                                Moderate (≥1 Air Pollution point)
-                                Excellent (Brightness >150 & Color Variance >40)
-                                Good (otherwise)
-                                Provide the output strictly as the following JSON format:
-                                {
-                                "primary_disaster": "...",
-                                "confidence": "...",
-                                "all_scores": {
-                                    "fire": ...,
-                                    "flood": ...,
-                                    "earthquake": ...,
-                                    "landslide": ...,
-                                    "storm": ...,
-                                    "drought": ...,
-                                    "air_pollution": ...,
-                                    "normal": ...
-                                },
-                                "air_quality": "...",
-                                "visual_analysis": {
-                                    "red_dominance": "...",
-                                    "blue_dominance": "...",
-                                    "green_dominance": "...",
-                                    "brightness": "...",
-                                    "contrast": "...",
-                                    "color_variance": "...",
-                                    "sharpness": "..."
-                                }
-                                }
-                                Note: Provide all numeric values formatted neatly with appropriate precision.`
+                    content: PromptRoleUser
                 }
             ],
             temperature: 0.7,
-            max_completion_tokens: 500,
+            max_completion_tokens: 1000,
             stream: false,
             top_p: 0.9,
         });
+        const analysisResult = analysis.choices[0].message.content;
+        const parsedAnalysis = JSON.parse(analysisResult || '{}');
+        Actor.addReport(repId, {
+            id: repId,
+            user: req.body.user || [],
+            category: (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.category) || 'Normal',
+            description: (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.description) || 'No description provided',
+            location: req.body.location || 'Unknown',
+            coordinates: req.body.coordinates || { latitude: 0, longitude: 0 },
+            imageCid: (cid === null || cid === void 0 ? void 0 : cid.toString()) || '',
+            status: 'valid',
+            timestamp: BigInt(new Date().getTime()),
+            confidence: (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.confidence) || 'low',
+            presentage_confidence: (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.presentage_confidence) || '0%',
+            rewardGiven: [],
+        });
         res.json({
-            status: 'succes',
-            analysis: ((_c = (_b = analysis.choices[0]) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.content) || ""
+            status: 'success',
         });
     }
     catch (error) {
-        console.error('Error processing image:', error);
         res.status(500).json({
             error: 'Failed to process image',
             details: error.message

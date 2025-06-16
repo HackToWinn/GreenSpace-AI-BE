@@ -80,7 +80,7 @@ type Account =
    subaccount: opt Subaccount;
  };
 service : {
-  icrc1_balance_of: (Account) -> (Tokens) query;
+  icrc1_balance_of: (account: Account) -> (Tokens) query;
   icrc1_decimals: () -> (nat8) query;
   icrc1_fee: () -> (nat) query;
   icrc1_metadata: () -> (vec record {
