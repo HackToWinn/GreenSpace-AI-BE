@@ -119,35 +119,51 @@ export const processImage = async (req: Request, res: Response) => {
             throw new Error(`Analysis failed: ${result.body.error?.message}`);
         }
 
+        const PromptRoleSystem = 
+            "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.";
+
+        const PromptRoleUser = `
+            Analyze the following image data and weather information in a step-by-step manner:
+            
+            Image Analysis Data: ${JSON.stringify(result.body)}
+            Weather Data: ${JSON.stringify(weatherResponse)}
+            Location: ${location}
+            
+            - Analyze the location context based on the provided location: ${location}
+            - Consider the current weather conditions from the weather data
+            - Identify geographical and environmental factors that might influence disaster risks
+            - Note any location-specific vulnerabilities or characteristics
+            
+            Validate the Image, Image Validation Requirements:
+            - Check if the image is clear and not blurry
+            - Verify if the image contains relevant environmental/geographical features
+            - Confirm if the image quality is sufficient for disaster analysis
+            - Determine if the image content is appropriate for disaster detection
+            
+            Provide the output strictly as the following JSON format:
+            {
+                "image_status": "valid/invalid",
+                "confidence": "High/Medium/Low",
+                "presentage_confidence": "90%",
+                "category": "Fire/Flood/Earthquake/Storm/Drought/Landslide/Air Pollution/Normal/Etc",
+                "description": "Detailed description of the analysis",
+            }
+            
+            First Note: Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
+            
+            Second Note: If image_status is "invalid", set confidence to "Low", presentage_confidence to "0%", category to "Invalid Image", and explain why the image is invalid in the description. Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
+        `;
+
         const analysis = await groq.chat.completions.create({
             model: 'gemma2-9b-it',
             messages: [
                 {
                     role: 'system',
-                    content: "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.",
+                    content: PromptRoleSystem,
                 },
                 {
                     role: 'user',
-                    content: `
-                    Analyze the following image data and weather information in a step-by-step manner:
-                    
-                    Image Analysis Data: ${JSON.stringify(result.body)}
-                    Weather Data: ${JSON.stringify(weatherResponse)}
-                    Location: ${location}                    
-                    - Analyze the location context based on the provided location: ${location}
-                    - Consider the current weather conditions from the weather data
-                    - Identify geographical and environmental factors that might influence disaster risks
-                    - Note any location-specific vulnerabilities or characteristics
-                  
-                    Provide the output strictly as the following JSON format:
-                    {
-                        "confidence": "High/Medium/Low",
-                        "presentage_confidence": "90%",
-                        "category": "Fire/Flood/Earthquake/Storm/Drought/Landslide/Air Pollution/Normal/Etc",
-                        "description": "Detailed description of the analysis",
-                    }
-                    
-                    Note: Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.`
+                    content: PromptRoleUser
                 }
             ],
             temperature: 0.7,
