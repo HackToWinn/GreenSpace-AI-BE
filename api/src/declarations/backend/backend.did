@@ -22,9 +22,7 @@ type Location =
  };
 service : {
   addReport: (text, Report) -> ();
-  fetchAllValidReport: () -> (vec Report);
   getReport: (text) -> (opt Report);
   getReportsThisWeek: () -> (vec Report);
-  getTotalReports: () -> (nat);
-  getTotalReportsThisWeek: () -> (nat);
+  getValidReports: () -> (vec Report);
 }

@@ -8,9 +8,7 @@ import { randomUUID } from 'crypto';
 import * as w3up from '@web3-storage/w3up-client';
 import { sanitize } from '../utils/sanitize';
 
-export const getReports = (req: Request, res: Response) => {
-    res.send('Data Rep');
-}
+
 
 export const storeImageToIPFS = async (file: File, req: Request, res: Response) => {
     try {
@@ -25,13 +23,12 @@ export const storeImageToIPFS = async (file: File, req: Request, res: Response) 
             details: error.message
         });
     }
-}
+}   
 
-
-export const getAllReports = async (req: Request, res: Response) => {
+export const getValidReports = async (req: Request, res: Response) => {
     try {
         const Actor = await useActor();
-        const reports = await Actor.fetchAllValidReport();        
+        const reports = await Actor.getValidReports();        
         res.json({
             success: true,
             reports: sanitize(reports)
@@ -44,19 +41,8 @@ export const getAllReports = async (req: Request, res: Response) => {
         });
     }
 };
-export const getTotalReports = async (req: Request, res: Response) => {
-    try {
-        const Actor = await useActor();
-        const reports = await Actor.getTotalReports();        
-        res.json({
-            success: true,
-            reports: reports
-        });
-    } catch (error) {
-        console.error('Error fetching reports:', error);
-    
-    }
-};
+
+
 
 export const getReportsThisWeek = async (req: Request, res: Response) => {
     try {
@@ -64,7 +50,7 @@ export const getReportsThisWeek = async (req: Request, res: Response) => {
         const reportsThisWeek = await Actor.getReportsThisWeek();
         res.json({
             success: true,
-            reports: reportsThisWeek
+            reports: sanitize(reportsThisWeek)
         });
     } catch (error) {
         console.error('Error fetching reports this week:', error);
@@ -82,7 +68,7 @@ export const getTotalReportsThisWeek = async (req: Request, res: Response) => {
         
         res.json({
             success: true,
-            total: totalReportsThisWeek.toString()
+            total: totalReportsThisWeek
         });
     } catch (error) {
         console.error('Error fetching total reports this week:', error);

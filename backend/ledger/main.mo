@@ -14,10 +14,10 @@ actor class Ledger(init : { initial_mints : [{ account : { owner : Principal; su
   public type Subaccount = Blob;
   public type Tokens = Nat;
   public type Memo = Blob;
-  public type Timestamp = Nat64;    
+  public type Timestamp = Nat64;
   public type Duration = Nat64;
   public type TxIndex = Nat;
-  public type TxLog = Buffer.Buffer<Transaction>;   
+  public type TxLog = Buffer.Buffer<Transaction>;
 
   public type Value = { #Nat : Nat; #Int : Int; #Blob : Blob; #Text : Text };
 

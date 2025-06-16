@@ -15,52 +15,20 @@ actor {
     var feedBacks = BTree.init<Text, ?Nat>(?24);
      
     public func addReport(id: Text, report: Types.Report) : async () {
-    ignore BTree.insert<Text, Types.Report>(
-      reports,
-      Text.compare,
-      id,
-      report
-    );
-  };
-
+      return await Report.addReport(id, report, reports);
+    };
     public func getReport(id: Text) : async ?Types.Report {
         return BTree.get(reports, Text.compare, id);
     };
-
-    public func fetchAllValidReport(): async[Types.Report] {
+    public func getValidReports(): async[Types.Report] {
        return await Report.getAllValidReports(reports);
     };
-    public func getTotalReportsThisWeek(): async Nat {
-      let currentTime = Time.now();
-      let oneWeekInNanos = 7 * 24 * 60 * 60 * 1_000_000_000; 
-      let weekStartTime = currentTime - oneWeekInNanos;
-      
-      var weeklyCount = 0;
-      for ((id, report) in BTree.entries(reports)) {
-        if (report.timestamp >= weekStartTime) {
-          weeklyCount += 1;
-        };
-      };
-      
-      return weeklyCount;
+    public func getReportsThisWeek(): async [Types.Report]{
+      return await Report.getReportsThisWeek(reports);
     };
-    public func getReportsThisWeek(): async [Types.Report] {
-      let currentTime = Time.now();
-      let oneWeekInNanos = 7 * 24 * 60 * 60 * 1_000_000_000; 
-      let weekStartTime = currentTime - oneWeekInNanos;
-      
-      var weeklyReports: [Types.Report] = [];
-      for ((id, report) in BTree.entries(reports)) {
-        if (report.timestamp >= weekStartTime) {
-          weeklyReports := Array.append(weeklyReports, [report]);
-        };
-      };
-      
-      return weeklyReports;
-    };
-    public func getTotalReports(): async Nat {
-      return BTree.size(reports);
-    };
+    // public func getTotalReports(): async Nat {
+    //   return BTree.size(reports);
+    // };
 
   
 }
