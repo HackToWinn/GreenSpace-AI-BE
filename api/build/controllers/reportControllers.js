@@ -1,22 +1,22 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function (o, m, k, k2) {
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
     if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function () { return m[k]; } };
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
     Object.defineProperty(o, k2, desc);
-}) : (function (o, m, k, k2) {
+}) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function (o, v) {
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
     Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function (o, v) {
+}) : function(o, v) {
     o["default"] = v;
 });
 var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function (o) {
+    var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
             var ar = [];
             for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
@@ -72,7 +72,7 @@ const storeImageToIPFS = (file, req, res) => __awaiter(void 0, void 0, void 0, f
 exports.storeImageToIPFS = storeImageToIPFS;
 const getValidReports = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const Actor = yield (0, useActor_1.default)();
+        const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
         const reports = yield Actor.getValidReports();
         res.json({
             success: true,
@@ -90,7 +90,7 @@ const getValidReports = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.getValidReports = getValidReports;
 const getReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const Actor = yield (0, useActor_1.default)();
+        const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
         const reportsThisWeek = yield Actor.getReportsThisWeek();
         res.json({
             success: true,
@@ -108,7 +108,7 @@ const getReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.getReportsThisWeek = getReportsThisWeek;
 const getTotalReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const Actor = yield (0, useActor_1.default)();
+        const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
         const totalReportsThisWeek = yield Actor.getReportsThisWeek();
         res.json({
             success: true,
@@ -135,7 +135,7 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const file = req.file.buffer;
     const location = req.body.location || 'Balikpapan';
     const repId = "rep-" + (0, crypto_1.randomUUID)().toString();
-    const Actor = yield (0, useActor_1.default)();
+    const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
     const groq = new groq_sdk_1.default({ apiKey: process.env.GROQ_API_KEY });
     const fileObj = new File([file], req.file.originalname || 'image', {
         type: req.file.mimetype || 'image/jpeg'
@@ -162,9 +162,7 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         if ((0, ai_vision_image_analysis_1.isUnexpected)(result)) {
             throw new Error(`Analysis failed: ${(_a = result.body.error) === null || _a === void 0 ? void 0 : _a.message}`);
         }
-        const PromptRoleSystem = 
-            "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.";
-
+        const PromptRoleSystem = "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.";
         const PromptRoleUser = `
             Analyze the following image data and weather information in a step-by-step manner:
             
@@ -186,7 +184,7 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             Provide the output strictly as the following JSON format:
             {
                 "image_status": "valid/invalid",
-                "confidence": "High/Medium/Low",
+                "confidence": "High/Medium/Low/None",
                 "presentage_confidence": "90%",
                 "category": "Fire/Flood/Earthquake/Storm/Drought/Landslide/Air Pollution/Normal/Etc",
                 "description": "Detailed description of the analysis",
@@ -194,9 +192,8 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             
             First Note: Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
             
-            Second Note: If image_status is "invalid", set confidence to "Low", presentage_confidence to "0%", category to "Invalid Image", and explain why the image is invalid in the description. Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
+            Second Note: If image_status is "invalid", set confidence to "None", presentage_confidence to "0%", category to "Invalid Image", and explain why the image is invalid in the description. Provide all numeric values formatted neatly with appropriate precision, Only return the JSON object. Do not wrap it in code block formatting.
         `;
-
         const analysis = yield groq.chat.completions.create({
             model: 'gemma2-9b-it',
             messages: [
