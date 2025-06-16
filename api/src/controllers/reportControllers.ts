@@ -171,6 +171,7 @@ export const processImage = async (req: Request, res: Response) => {
             stream: false,
             top_p: 0.9,
         });
+        
         const analysisResult = analysis.choices[0].message.content;
         const parsedAnalysis = JSON.parse(analysisResult || '{}');
         Actor.addReport(repId, {
@@ -187,7 +188,6 @@ export const processImage = async (req: Request, res: Response) => {
             presentage_confidence: parsedAnalysis?.presentage_confidence || '0%',
             rewardGiven: [],
         });
-
 
         res.json({
             status: 'success',
