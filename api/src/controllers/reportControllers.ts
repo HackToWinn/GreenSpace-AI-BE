@@ -1,14 +1,13 @@
 import { Request, Response } from 'express';
 import 'dotenv/config';
-import { useBackend } from '../hooks/useActor';
+import { useBackend, useToken } from '../hooks/useActor';
 import { AzureKeyCredential } from '@azure/core-auth';
 import ImageAnalysisClient, { isUnexpected } from '@azure-rest/ai-vision-image-analysis';
 import Groq from 'groq-sdk';
 import { randomUUID } from 'crypto';
 import * as w3up from '@web3-storage/w3up-client';
 import { sanitize } from '../utils/sanitize';
-
-
+import { Principal } from '@dfinity/principal';
 
 export const storeImageToIPFS = async (file: File, req: Request, res: Response) => {
     try {
@@ -23,12 +22,12 @@ export const storeImageToIPFS = async (file: File, req: Request, res: Response) 
             details: error.message
         });
     }
-}   
+}
 
 export const getValidReports = async (req: Request, res: Response) => {
     try {
         const Actor = await useBackend();
-        const reports = await Actor.getValidReports();        
+        const reports = await Actor.getValidReports();
         res.json({
             success: true,
             reports: sanitize(reports)
@@ -65,7 +64,7 @@ export const getTotalReportsThisWeek = async (req: Request, res: Response) => {
     try {
         const Actor = await useBackend();
         const totalReportsThisWeek = await Actor.getReportsThisWeek();
-        
+
         res.json({
             success: true,
             total: totalReportsThisWeek
@@ -79,7 +78,21 @@ export const getTotalReportsThisWeek = async (req: Request, res: Response) => {
     }
 };
 
-export const processImage = async (req: Request, res: Response) => {   
+const countTokenReward = (confidence: string): number => {
+    switch (confidence.toLowerCase()) {
+        case 'high':
+            return 8;
+        case 'medium':
+            return 6;
+        case 'low':
+            return 4;
+        case 'none':
+        default:
+            return 0;
+    }
+};
+
+export const processImage = async (req: Request, res: Response) => {
     if (!req.file) {
         res.status(400).json({ error: 'No file uploaded' });
         return;
@@ -90,14 +103,14 @@ export const processImage = async (req: Request, res: Response) => {
     const location: string = req.body.location || 'Balikpapan';
     const repId = "rep-" + randomUUID().toString();
     const Actor = await useBackend();
-    const groq = new Groq({apiKey: process.env.GROQ_API_KEY!});
-    const fileObj = new File([file], req.file.originalname || 'image', { 
-        type: req.file.mimetype || 'image/jpeg' 
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+    const fileObj = new File([file], req.file.originalname || 'image', {
+        type: req.file.mimetype || 'image/jpeg'
     });
     const credential = new AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY!);
     const client = ImageAnalysisClient(endpoint, credential);
     const cid = await storeImageToIPFS(fileObj, req, res);
-  
+
     const weatherData = await fetch(`${process.env.WEATHER_API_URL!}/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}`, {
         method: 'GET',
         headers: {
@@ -105,6 +118,7 @@ export const processImage = async (req: Request, res: Response) => {
         },
     });
     const weatherResponse = await weatherData.json();
+
     try {
         const result = await client.path("/imageanalysis:analyze").post({
             body: file,
@@ -119,7 +133,7 @@ export const processImage = async (req: Request, res: Response) => {
             throw new Error(`Analysis failed: ${result.body.error?.message}`);
         }
 
-        const PromptRoleSystem = 
+        const PromptRoleSystem =
             "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.";
 
         const PromptRoleUser = `
@@ -171,22 +185,34 @@ export const processImage = async (req: Request, res: Response) => {
             stream: false,
             top_p: 0.9,
         });
-        
+
         const analysisResult = analysis.choices[0].message.content;
         const parsedAnalysis = JSON.parse(analysisResult || '{}');
+
+        const confidence = parsedAnalysis?.confidence || 'None';
+        const totalTokenReward = countTokenReward(confidence);
+
+        if (req.body.user && totalTokenReward > 0) {
+            try {
+                await sendReportReward(totalTokenReward);
+            } catch (rewardError) {
+                console.error('Error sending reward:', rewardError);
+            }
+        }
+
         Actor.addReport(repId, {
             id: repId,
             user: req.body.user || [],
             category: parsedAnalysis?.category || 'Normal',
             description: parsedAnalysis?.description || 'No description provided',
             location: req.body.location || 'Unknown',
-            coordinates: req.body.coordinates || {latitude: 0, longitude: 0},
-            imageCid: cid?.toString() || '',     
+            coordinates: req.body.coordinates || { latitude: 0, longitude: 0 },
+            imageCid: cid?.toString() || '',
             status: 'valid',
             timestamp: BigInt(new Date().getTime()),
-            confidence: parsedAnalysis?.confidence || 'low',
+            confidence: confidence,
             presentage_confidence: parsedAnalysis?.presentage_confidence || '0%',
-            rewardGiven: [],
+            rewardGiven: [totalTokenReward],
         });
 
         res.json({
@@ -198,5 +224,29 @@ export const processImage = async (req: Request, res: Response) => {
             error: 'Failed to process image',
             details: (error as Error).message
         });
+    }
+};
+
+export const sendReportReward = async (tokenAmount: number) => {
+    try {
+        const Actor = await useToken();
+
+        const Reward = await Actor.icrc1_transfer({
+            from_subaccount: [],
+            to: {
+                owner: Principal.fromText('3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe') as any,
+                subaccount: []
+            },
+            amount: BigInt(tokenAmount),  
+            fee: [],
+            memo: [],
+            created_at_time: []
+        });
+
+        return Reward;
+
+    } catch (error) {
+        console.error('Error sending token reward:', error);
+        throw new Error(`Failed to send token reward: ${(error as Error).message}`);
     }
 };

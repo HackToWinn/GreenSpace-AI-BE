@@ -11,6 +11,9 @@ export interface Report {
   rewardGiven: number | null;
 }
 
+export interface Reward {
+}
+
 export interface Location {
   latitude: number;
   longitude: number;
