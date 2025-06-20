@@ -4,6 +4,7 @@ module {
   public type UserId = Principal;
   public type User = {
     id : UserId;
+    pictureCid: Text;
     username : Text;
     email : Text;
     walletAddress : Text;
@@ -27,4 +28,10 @@ module {
     status : Text;
     rewardGiven : ?Float;
   };
+
+  public type Comment = {
+    id : Text;
+    reportId: Text;
+    rating: Float;
+  }
 };
