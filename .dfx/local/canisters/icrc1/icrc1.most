@@ -1,40 +1,45 @@
 // Version: 1.0.0
-type Account = {owner : Principal; subaccount : ?Subaccount};
-type Approve =
+type Account__479664605 =
+  {owner : Principal; subaccount : ?Subaccount__870323295};
+type Approve__452783945 =
   {
     amount : Nat;
-    created_at_time : ?Timestamp;
+    created_at_time : ?Timestamp__931193751;
     expires_at : ?Nat64;
-    fee : ?Tokens;
-    from : Account;
-    memo : ?Memo;
-    spender : Account
+    fee : ?Tokens__746397002;
+    from : Account__479664605;
+    memo : ?Memo__784747104;
+    spender : Account__479664605
   };
-type Memo = Blob;
-type Operation =
+type Memo__784747104 = Blob;
+type Operation__25253292 =
   {
-    #Approve : Approve;
-    #Burn : Transfer;
-    #Mint : Transfer;
-    #Transfer : Transfer
+    #Approve : Approve__452783945;
+    #Burn : Transfer__598525736;
+    #Mint : Transfer__598525736;
+    #Transfer : Transfer__598525736
   };
-type Subaccount = Blob;
-type Timestamp = Nat64;
-type Tokens = Nat;
-type Transaction =
-  {fee : Tokens; operation : Operation; timestamp : Timestamp};
-type Transfer =
+type Subaccount__870323295 = Blob;
+type Timestamp__931193751 = Nat64;
+type Tokens__746397002 = Nat;
+type Transaction__642986997 =
   {
-    amount : Tokens;
-    created_at_time : ?Timestamp;
-    fee : ?Tokens;
-    from : Account;
-    memo : ?Memo;
-    source : TransferSource;
-    spender : Account;
-    to : Account
+    fee : Tokens__746397002;
+    operation : Operation__25253292;
+    timestamp : Timestamp__931193751
   };
-type TransferSource = {#Icrc1Transfer; #Icrc2TransferFrom; #Init};
+type TransferSource__1004927876 = {#Icrc1Transfer; #Icrc2TransferFrom; #Init};
+type Transfer__598525736 =
+  {
+    amount : Tokens__746397002;
+    created_at_time : ?Timestamp__931193751;
+    fee : ?Tokens__746397002;
+    from : Account__479664605;
+    memo : ?Memo__784747104;
+    source : TransferSource__1004927876;
+    spender : Account__479664605;
+    to : Account__479664605
+  };
 actor {
-  stable var persistedLog : [Transaction]
+  stable var persistedLog : [Transaction__642986997]
 };

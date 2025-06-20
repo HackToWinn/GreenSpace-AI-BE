@@ -17,6 +17,13 @@ export interface Report {
   'location' : string,
   'coordinates' : Location,
 }
+
+export interface Comment {
+  'id' : string,
+  'reportId' : string,
+  'rating' : number,
+}
+
 export type Time = bigint;
 export type UserId = Principal;
 export interface _SERVICE {

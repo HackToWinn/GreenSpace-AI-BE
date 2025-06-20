@@ -11,6 +11,12 @@ export interface Report {
   rewardGiven: number | null;
 }
 
+export interface Comment{
+  id: string;
+  reportId: string;
+  rating: number; 
+}
+
 export interface Reward {
 }
 
