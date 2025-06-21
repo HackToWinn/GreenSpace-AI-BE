@@ -38,7 +38,7 @@ service : {
   getLatestReport: () -> (opt Report);
   getMostReportedCategory: () -> (opt text);
   getReport: (id: text) -> (opt Report);
-  getReportByUser: () -> (vec Report);
+  getReportByUser: (userId: UserId) -> (vec Report);
   getReportsThisWeek: () -> (vec Report);
   getUserById: () -> (opt User);
   getUsers: () -> (vec User);

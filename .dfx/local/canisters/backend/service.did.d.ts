@@ -17,20 +17,35 @@ export interface Report {
   'location' : string,
   'coordinates' : Location,
 }
-
-export interface Comment {
-  'id' : string,
-  'reportId' : string,
-  'rating' : number,
-}
-
 export type Time = bigint;
+export interface User {
+  'id' : UserId,
+  'username' : string,
+  'pictureCid' : string,
+  'joinedAt' : Time,
+  'email' : string,
+}
 export type UserId = Principal;
 export interface _SERVICE {
   'addReport' : ActorMethod<[string, Report], undefined>,
+  'addUser' : ActorMethod<
+    [string, string, string],
+    { 'error' : [] | [string], 'success' : boolean }
+  >,
+  'getLatestReport' : ActorMethod<[], [] | [Report]>,
+  'getMostReportedCategory' : ActorMethod<[], [] | [string]>,
   'getReport' : ActorMethod<[string], [] | [Report]>,
+  'getReportByUser' : ActorMethod<[], Array<Report>>,
   'getReportsThisWeek' : ActorMethod<[], Array<Report>>,
+  'getUserById' : ActorMethod<[], [] | [User]>,
+  'getUsers' : ActorMethod<[], Array<User>>,
+  'getValidReportCount' : ActorMethod<[], bigint>,
   'getValidReports' : ActorMethod<[], Array<Report>>,
+  'getValidWeeklyReportCount' : ActorMethod<[], bigint>,
+  'updateUser' : ActorMethod<
+    [[] | [string], [] | [string], [] | [string]],
+    { 'error' : [] | [string], 'success' : boolean }
+  >,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

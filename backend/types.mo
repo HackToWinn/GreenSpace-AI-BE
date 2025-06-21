@@ -4,10 +4,9 @@ module {
   public type UserId = Principal;
   public type User = {
     id : UserId;
-    pictureCid: Text;
+    pictureCid: Text;    
     username : Text;
     email : Text;
-    walletAddress : Text;
     joinedAt : Time.Time;
   };
   public type Location = {
@@ -16,7 +15,7 @@ module {
   };
   public type Report = {
     id : Text;
-    user : ?UserId;
+    user : UserId;
     category : Text;
     description : Text;
     confidence : Text;
@@ -32,6 +31,8 @@ module {
   public type Comment = {
     id : Text;
     reportId: Text;
+    message: Text;
+    userId: UserId;
     rating: Float;
   }
 };

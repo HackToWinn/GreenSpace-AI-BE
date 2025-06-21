@@ -1,8 +1,14 @@
 import { Router } from 'express';
-import { getUser } from '../controllers/userControllers';
+import{ addUser, getUser, updateUser} from '../controllers/userControllers';
+import { upload } from '../utils/uploadImageMulter';
 
 const router = Router();
 
-router.get('/', getUser);
+router.post('/create',upload.single('picture'), addUser );
+router.post('/update',upload.single('picture'), updateUser );
+router.post('/get', getUser );
+
+
+
 
 export default router;

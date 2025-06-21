@@ -11,7 +11,7 @@
       "init_arg_file": "backend/ledger/init_arg.did"
     }
   },
-  "output_env_file": "api/.env",
+  "output_env_file": "./api/.env",
   "defaults": {
     "build": {
       "packtool": "mops sources"

@@ -5,24 +5,12 @@ import { AzureKeyCredential } from '@azure/core-auth';
 import ImageAnalysisClient, { isUnexpected } from '@azure-rest/ai-vision-image-analysis';
 import Groq from 'groq-sdk';
 import { randomUUID } from 'crypto';
-import * as w3up from '@web3-storage/w3up-client';
 import { sanitize } from '../utils/sanitize';
 import { Principal } from '@dfinity/principal';
+import { storeImageToIPFS } from '../utils/storeImageToIPFS';
+import { imageBuffer } from '../utils/imageBuffer';
 
-export const storeImageToIPFS = async (file: File, req: Request, res: Response) => {
-    try {
-        const client = await w3up.create();
-        await client.login(process.env.WEB3_STORAGE_EMAIL as `${string}@${string}`);
-        await client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY!}`);
-        const cid = await client.uploadFile(file);
-        return cid;
-    } catch (error: any) {
-        res.status(500).json({
-            error: 'Failed to store image',
-            details: error.message
-        });
-    }
-}
+
 
 export const getValidReports = async (req: Request, res: Response) => {
     try {
@@ -35,8 +23,8 @@ export const getValidReports = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error fetching reports:', error);
         res.status(500).json({
-            error: 'Failed to fetch reports',
-            details: (error as Error).message
+            error: 'Failed to fetch report',
+            details: (error as Error).message,
         });
     }
 };
@@ -98,16 +86,15 @@ export const processImage = async (req: Request, res: Response) => {
         return;
     }
     const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
-    const endpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT!;
-    const file = req.file.buffer;
+    const endpoint = process.env.AZURE_COMPUTER_VISION_API_ENDPOINT!;
     const location: string = req.body.location || 'Balikpapan';
     const repId = "rep-" + randomUUID().toString();
     const Actor = await useBackend();
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
-    const fileObj = new File([file], req.file.originalname || 'image', {
-        type: req.file.mimetype || 'image/jpeg'
-    });
+    const fileObj = imageBuffer(req);
+
     const credential = new AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY!);
+
     const client = ImageAnalysisClient(endpoint, credential);
     const cid = await storeImageToIPFS(fileObj, req, res);
 
@@ -118,10 +105,9 @@ export const processImage = async (req: Request, res: Response) => {
         },
     });
     const weatherResponse = await weatherData.json();
-
     try {
         const result = await client.path("/imageanalysis:analyze").post({
-            body: file,
+            body: req.file.buffer,
             queryParameters: {
                 features: features,
                 "smartCrops-aspect-ratios": [0.9, 1.33],
@@ -191,7 +177,6 @@ export const processImage = async (req: Request, res: Response) => {
 
         const confidence = parsedAnalysis?.confidence || 'None';
         const totalTokenReward = countTokenReward(confidence);
-
         if (req.body.user && totalTokenReward > 0) {
             try {
                 await sendReportReward(totalTokenReward);
@@ -220,6 +205,7 @@ export const processImage = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
+        console.error('Error processing image:', error);
         res.status(500).json({
             error: 'Failed to process image',
             details: (error as Error).message
@@ -250,3 +236,63 @@ export const sendReportReward = async (tokenAmount: number) => {
         throw new Error(`Failed to send token reward: ${(error as Error).message}`);
     }
 };
+export async function getMostReportedCategory(req: Request, res: Response) {
+    try {
+        const Actor = await useBackend();
+        const mostReportedCategory = await Actor.getMostReportedCategory();
+
+        res.json({
+            success: true,
+            category: mostReportedCategory
+        });
+    } catch (error) {
+        console.error('Error fetching most reported category:', error);
+        res.status(500).json({
+            error: 'Failed to fetch most reported category',
+            details: (error as Error).message
+        });
+    }
+}
+
+export async function getReportById(req: Request
+, res: Response) {
+    const reportId = req.params.id;
+    try {
+        const Actor = await useBackend();
+        const report = await Actor.getReport(reportId);
+
+        if (!report) {
+            return res.status(404).json({
+                error: 'Report not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            report: sanitize(report)
+        });
+    } catch (error) {
+        console.error('Error fetching report by ID:', error);
+        res.status(500).json({
+            error: 'Failed to fetch report by ID',
+            details: (error as Error).message
+        });
+    }
+}
+export async function getLatestReports(req: Request, res: Response) {
+    try {
+        const Actor = await useBackend();
+        const latestReports = await Actor.getLatestReport();
+
+        res.json({
+            success: true,
+            reports: sanitize(latestReports)
+        });
+    } catch (error) {
+        console.error('Error fetching latest reports:', error);
+        res.status(500).json({
+            error: 'Failed to fetch latest reports',
+            details: (error as Error).message
+        });
+    }
+}
