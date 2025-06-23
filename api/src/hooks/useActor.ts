@@ -7,10 +7,7 @@ import {
   canisterId as backendCanister,
   createActor as backendActor,
 } from '../../../src/declarations/backend';
-import {
-  canisterId as tokenCanister,
-  createActor as tokenActor,
-} from '../../../src/declarations/icrc1';
+
 
 export async function useBackend(
   identity?: Ed25519KeyIdentity,

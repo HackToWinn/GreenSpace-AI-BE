@@ -9,7 +9,11 @@ import { badRequest } from "../lib/badRequest";
 
 // Create user
 export async function addUser(req: Request, res: Response) {
+  console.time('addUser_total'); // Mulai waktu total
+
   const { username, email, delegation, identity } = req.body;
+
+  // Cek input dan file
   if (!req.file) return badRequest(res, "Missing required fields: picture");
   if (!username || !email)
     return badRequest(res, "Missing required fields: username and email");
@@ -17,18 +21,36 @@ export async function addUser(req: Request, res: Response) {
     return badRequest(res, "Missing required fields: delegation and identity");
 
   let pictureCidString = "";
+
   try {
+    // --- Measure buffer extraction
+    console.time('buffer_extraction');
     const picture = imageBuffer(req);
+    console.timeEnd('buffer_extraction');
+
+    // --- Measure IPFS upload
+    console.time('ipfs_upload');
     const pictureCid = await storeImageToIPFS(picture, req, res);
+    console.timeEnd('ipfs_upload');
+
     if (!pictureCid) return internalError(res, "Failed to store picture to IPFS");
     pictureCidString = pictureCid.toString();
 
+    // --- Measure Actor creation
+    console.time('actor_creation');
     const Actor = await useBackend(identity, delegation);
+    console.timeEnd('actor_creation');
+
+    // --- Measure canister call
+    console.time('canister_call');
     await Actor.addUser(email, username, pictureCidString);
+    console.timeEnd('canister_call');
 
     res.status(200).json({ message: "User created successfully" });
   } catch (error) {
     return internalError(res, "Failed to add user", error);
+  } finally {
+    console.timeEnd('addUser_total'); // Akhiri waktu total
   }
 }
 

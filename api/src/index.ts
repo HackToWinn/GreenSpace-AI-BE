@@ -16,7 +16,7 @@ const PORT = process.env.EXPRESS_PORT|| 3001;
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`Incoming request: ${req.method} ${req.path}`);
     next();
