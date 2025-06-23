@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import 'dotenv/config';
-import { useBackend, useToken } from '../hooks/useActor';
+import { useBackend } from '../hooks/useActor';
 import { AzureKeyCredential } from '@azure/core-auth';
 import ImageAnalysisClient, { isUnexpected } from '@azure-rest/ai-vision-image-analysis';
 import Groq from 'groq-sdk';
@@ -149,11 +149,11 @@ export const processImage = async (req: Request, res: Response) => {
     const { confidence = 'None', category = 'Normal', description = 'No description provided', presentage_confidence = '0%', image_status = 'invalid' } = parsedAnalysis as any;
     const totalTokenReward = countTokenReward(confidence);
 
-    // Send reward if valid
-    if (user && totalTokenReward > 0) {
-      try { await sendReportReward(totalTokenReward); }
-      catch (rewardError) { console.error('Error sending reward:', rewardError); }
-    }
+    // // Send reward if valid
+    // if (user && totalTokenReward > 0) {
+    //   try { await sendReportReward(totalTokenReward); }
+    //   catch (rewardError) { console.error('Error sending reward:', rewardError); }
+    // }
 
     // Save report
     await Actor.addReport(repId, {
@@ -177,27 +177,27 @@ export const processImage = async (req: Request, res: Response) => {
   }
 };
 
-// Token reward util
-export const sendReportReward = async (tokenAmount: number) => {
-  try {
-    const Actor = await useToken();
-    const Reward = await Actor.icrc1_transfer({
-      from_subaccount: [],
-      to: {
-        owner: Principal.fromText('3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe') as any,
-        subaccount: []
-      },
-      amount: BigInt(tokenAmount),
-      fee: [],
-      memo: [],
-      created_at_time: []
-    });
-    return Reward;
-  } catch (error) {
-    console.error('Error sending token reward:', error);
-    throw new Error(`Failed to send token reward: ${(error as Error).message}`);
-  }
-};
+// // Token reward util
+// export const sendReportReward = async (tokenAmount: number) => {
+//   try {
+//     const Actor = await useToken();
+//     const Reward = await Actor.icrc1_transfer({
+//       from_subaccount: [],
+//       to: {
+//         owner: Principal.fromText('3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe') as any,
+//         subaccount: []
+//       },
+//       amount: BigInt(tokenAmount),
+//       fee: [],
+//       memo: [],
+//       created_at_time: []
+//     });
+//     return Reward;
+//   } catch (error) {
+//     console.error('Error sending token reward:', error);
+//     throw new Error(`Failed to send token reward: ${(error as Error).message}`);
+//   }
+// };
 
 // Get most reported category
 export async function getMostReportedCategory(req: Request, res: Response) {
