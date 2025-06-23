@@ -1,11 +1,14 @@
 {
   "__Candid_UI": {
-    "local": "l62sy-yx777-77777-aaabq-cai"
+    "local": "uzt4z-lp777-77774-qaabq-cai"
   },
   "backend": {
-    "local": "lqy7q-dh777-77777-aaaaq-cai"
+    "local": "uxrrr-q7777-77774-qaaaq-cai"
   },
   "icrc1": {
-    "local": "lz3um-vp777-77777-aaaba-cai"
+    "local": "u6s2n-gx777-77774-qaaba-cai"
+  },
+  "internet_identity": {
+    "local": "rdmx6-jaaaa-aaaaa-aaadq-cai"
   }
 }

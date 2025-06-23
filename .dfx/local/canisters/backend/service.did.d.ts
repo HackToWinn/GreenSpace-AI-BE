@@ -6,7 +6,7 @@ export interface Location { 'latitude' : number, 'longitude' : number }
 export interface Report {
   'id' : string,
   'status' : string,
-  'user' : [] | [UserId],
+  'user' : UserId,
   'description' : string,
   'imageCid' : string,
   'rewardGiven' : [] | [number],

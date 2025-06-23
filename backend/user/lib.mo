@@ -7,7 +7,7 @@ import Types "../types";
 
 module {
   public func addUser(
-    users : BTree.BTree<Text, Types.User>,
+    users : BTree.BTree<Principal, Types.User>,
     principal : Principal,
     user : object {
       email : Text;
@@ -26,16 +26,26 @@ module {
       joinedAt = currentTime;
     };
 
-    // Check is username is already registered
-    if (BTree.has(users, Text.compare, user.username)) {
+    // Check if principal is already registered
+    if (BTree.has(users, Principal.compare, principal)) {
       return {
         success = false;
-        error = ?"Username already exists";
+        error = ?"User already exists";
+      };
+    };
+
+    // Check if username is already taken
+    label check for ((_, existingUser) in BTree.entries(users)) {
+      if (existingUser.username == newUser.username) {
+        return {
+          success = false;
+          error = ?"Username already taken";
+        };
       };
     };
 
     // Create a new user object
-    ignore BTree.insert<Text, Types.User>(users, Text.compare, newUser.username, newUser);
+    ignore BTree.insert<Principal, Types.User>(users, Principal.compare, newUser.id, newUser);
 
     return {
       success = true;
@@ -43,7 +53,7 @@ module {
     };
   };
   public func getUserById(
-    users : BTree.BTree<Text, Types.User>,
+    users : BTree.BTree<Principal, Types.User>,
     userId : Principal,
   ) : async ?Types.User {
     label search for ((_, user) in BTree.entries(users)) {
@@ -54,7 +64,7 @@ module {
     return null;
   };
 
-  public func getUsers(users : BTree.BTree<Text, Types.User>) : async [Types.User] {
+  public func getUsers(users : BTree.BTree<Principal, Types.User>) : async [Types.User] {
     let resultBuffer = Buffer.Buffer<Types.User>(0);
     for ((key, users) in BTree.entries(users)) {
       resultBuffer.add(users);
@@ -62,7 +72,7 @@ module {
     return Buffer.toArray(resultBuffer);
   };
 public func updateUser(
-  users : BTree.BTree<Text, Types.User>,
+  users : BTree.BTree<Principal, Types.User>,
   principal : Principal,
   user : {
     email : ?Text;
@@ -89,8 +99,13 @@ public func updateUser(
         case (?p) p;
       };
 
-      if (newUsername != oldUsername and BTree.has(users, Text.compare, newUsername)) {
-        return { success = false; error = ?"Username already taken" };
+      if (newUsername != oldUsername) {
+        // Manually check if the new username already exists
+        label check for ((_, userEntry) in BTree.entries(users)) {
+          if (userEntry.username == newUsername) {
+            return { success = false; error = ?"Username already taken" };
+          };
+        };
       };
 
       let updatedUser : Types.User = {
@@ -102,10 +117,10 @@ public func updateUser(
       };
 
       if (newUsername != oldUsername) {
-        ignore BTree.delete(users, Text.compare, oldUsername);
-        ignore BTree.insert(users, Text.compare, newUsername, updatedUser);
+        ignore BTree.delete(users, Principal.compare, principal);
+        ignore BTree.insert(users, Principal.compare, principal, updatedUser);
       } else {
-        ignore BTree.insert(users, Text.compare, oldUsername, updatedUser);
+        ignore BTree.insert(users, Principal.compare, principal, updatedUser);
       };
 
       return { success = true; error = null };

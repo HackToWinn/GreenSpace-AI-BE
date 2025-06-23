@@ -1,13 +1,46 @@
-import { DelegationIdentity, WebAuthnIdentity } from '@dfinity/identity';
-import { canisterId as backendCanister, createActor as backendActor } from '../../../src/declarations/backend';
-import { canisterId as tokenCanister, createActor as tokenActor } from '../../../src/declarations/icrc1';
-import { Identity } from '@dfinity/agent';
+import {
+  DelegationChain,
+  DelegationIdentity,
+  Ed25519KeyIdentity,
+} from '@dfinity/identity';
+import {
+  canisterId as backendCanister,
+  createActor as backendActor,
+} from '../../../src/declarations/backend';
+import {
+  canisterId as tokenCanister,
+  createActor as tokenActor,
+} from '../../../src/declarations/icrc1';
 
-export async function useBackend(identity?: DelegationIdentity) {
+export async function useBackend(
+  identity?: Ed25519KeyIdentity,
+  delegation?: DelegationChain | string
+) {
+  let delegationIdentity;
+
+  if (identity && delegation) {
+    const reconstructedChain =
+      typeof delegation === 'string'
+        ? DelegationChain.fromJSON(delegation)
+        : delegation;
+
+    const reconstructedBase =
+      identity instanceof Ed25519KeyIdentity
+        ? identity
+        : Ed25519KeyIdentity.fromJSON(
+            typeof identity === 'string' ? identity : JSON.stringify(identity)
+          );
+
+    delegationIdentity = DelegationIdentity.fromDelegation(
+      reconstructedBase,
+      reconstructedChain
+    );
+  }
+
   return backendActor(process.env.CANISTER_ID_BACKEND || backendCanister, {
     agentOptions: {
       host: 'http://127.0.0.1:4943',
-      identity: identity 
+      identity: delegationIdentity,
     },
   });
 }

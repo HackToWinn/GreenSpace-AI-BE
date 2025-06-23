@@ -69,11 +69,12 @@ module {
   public func getReportById(id : Text, reports : BTree.BTree<Text, Types.Report>) : async ?Types.Report {
     BTree.get<Text, Types.Report>(reports, Text.compare, id);
   };
-  public func getReportByUser(user : Principal, reports : BTree.BTree<Text, Types.Report>) : async [Types.Report] {
-    let resultBuffer = Buffer.Buffer<Types.Report>(0);
+  public func getReportByUser(user : Principal, reports : BTree.BTree<Text, Types.Report>, users : BTree.BTree<Principal, Types.User>) : async [{ report : Types.Report; user : ?Types.User }] {
+    let resultBuffer = Buffer.Buffer<{ report : Types.Report; user : ?Types.User }>(0);
     for ((key, report) in BTree.entries(reports)) {
       if (report.user == user) {
-        resultBuffer.add(report);
+        let userData = BTree.get(users, Principal.compare, user);
+        resultBuffer.add({ report = report; user = userData });
       };
     };
     return Buffer.toArray(resultBuffer);

@@ -8,7 +8,7 @@ export const idlFactory = ({ IDL }) => {
   const Report = IDL.Record({
     'id' : IDL.Text,
     'status' : IDL.Text,
-    'user' : IDL.Opt(UserId),
+    'user' : UserId,
     'description' : IDL.Text,
     'imageCid' : IDL.Text,
     'rewardGiven' : IDL.Opt(IDL.Float64),
