@@ -39,16 +39,16 @@ export async function useBackend(
 
   return backendActor(process.env.CANISTER_ID_BACKEND || backendCanister, {
     agentOptions: {
-      host: 'http://127.0.0.1:4943',
+      host: process.env.AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
       identity: delegationIdentity,
     },
   });
 }
 
-export async function useToken() {
-  return tokenActor(process.env.CANISTER_ID_ICRC1 || tokenCanister, {
-    agentOptions: {
-      host: 'http://127.0.0.1:4943',
-    },
-  });
-}
+// export async function useToken() {
+//   return tokenActor(process.env.CANISTER_ID_ICRC1 || tokenCanister, {
+//     agentOptions: {
+//       host: process.env.AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
+//     },
+//   });
+// }
