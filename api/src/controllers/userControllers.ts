@@ -3,8 +3,8 @@ import { storeImageToIPFS } from "../utils/storeImageToIPFS";
 import { useBackend } from "../hooks/useActor";
 import { imageBuffer } from "../utils/imageBuffer";
 import { sanitize } from "../utils/sanitize";
-import { internalError } from "../../lib/internalError";
-import { badRequest } from "../../lib/badRequest";
+import { internalError } from "../lib/internalError";
+import { badRequest } from "../lib/badRequest";
 
 
 // Create user
