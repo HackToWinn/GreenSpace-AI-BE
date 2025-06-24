@@ -8,8 +8,7 @@
     "lint:fix": "eslint --fix"
   },
   "workspaces": [
-    "api",
-    "proxy_frontend"
+    "api"
   ],
   "dependencies": {
     "@azure/storage-blob": "^12.27.0",
