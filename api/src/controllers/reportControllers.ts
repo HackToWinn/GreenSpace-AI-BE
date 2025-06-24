@@ -7,7 +7,7 @@ import Groq from 'groq-sdk';
 import { randomUUID } from 'crypto';
 import { sanitize } from '../utils/sanitize';
 import { Principal } from '@dfinity/principal';
-import { storeImageToIPFS } from '../utils/storeImageToIPFS';
+import { storeImageToStorage } from '../utils/storeImageToStorage';
 import { imageBuffer } from '../utils/imageBuffer';
 
 // ---------- Helper for Error Response ----------
@@ -76,10 +76,9 @@ export const processImage = async (req: Request, res: Response) => {
   const repId = "rep-" + randomUUID();
   const Actor = await useBackend(identity, delegation);
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
-  const fileObj = imageBuffer(req);
 
-  // Store image to IPFS
-  const cid = await storeImageToIPFS(fileObj, req, res);
+  // Store image to Azure Blob Storage
+  const url = await storeImageToStorage(req.file, req, res, 'reports');
 
   // Fetch weather data
   const weatherData = await fetch(
@@ -163,7 +162,7 @@ export const processImage = async (req: Request, res: Response) => {
       description,
       location,
       coordinates: coordinates || { latitude: 0, longitude: 0 },
-      imageCid: cid?.toString() || '',
+      imageCid: url || '',
       status: image_status === 'valid' ? 'valid' : 'invalid',
       timestamp: BigInt(Date.now()),
       confidence,

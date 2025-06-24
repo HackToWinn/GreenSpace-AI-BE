@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.imageBuffer = void 0;
-const imageBuffer = (req) => {
+export const imageBuffer = (req) => {
     if (!req.file) {
         throw new Error('No file uploaded');
     }
@@ -14,4 +11,3 @@ const imageBuffer = (req) => {
     }
     return fileObj;
 };
-exports.imageBuffer = imageBuffer;

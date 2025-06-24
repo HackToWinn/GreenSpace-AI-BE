@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.internalError = internalError;
-function internalError(res, msg, error) {
+export function internalError(res, msg, error) {
     console.error(msg, error);
     return res.status(500).json({
         error: msg,

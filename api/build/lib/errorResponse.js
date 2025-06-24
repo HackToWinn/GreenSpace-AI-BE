@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.errorResponse = errorResponse;
-function errorResponse(res, msg, error, code = 500) {
+export function errorResponse(res, msg, error, code = 500) {
     console.error(msg, error);
     return res.status(code).json({
         error: msg,
