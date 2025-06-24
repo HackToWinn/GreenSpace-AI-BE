@@ -1,45 +1,45 @@
 // Version: 1.0.0
-type Account__710357038 =
-  {owner : Principal; subaccount : ?Subaccount__948579739};
-type Approve__303683770 =
+type Account__479664605 =
+  {owner : Principal; subaccount : ?Subaccount__870323295};
+type Approve__452783945 =
   {
     amount : Nat;
-    created_at_time : ?Timestamp__539690868;
+    created_at_time : ?Timestamp__931193751;
     expires_at : ?Nat64;
-    fee : ?Tokens__743263790;
-    from : Account__710357038;
-    memo : ?Memo__497029250;
-    spender : Account__710357038
+    fee : ?Tokens__746397002;
+    from : Account__479664605;
+    memo : ?Memo__784747104;
+    spender : Account__479664605
   };
-type Memo__497029250 = Blob;
-type Operation__944480344 =
+type Memo__784747104 = Blob;
+type Operation__25253292 =
   {
-    #Approve : Approve__303683770;
-    #Burn : Transfer__853239164;
-    #Mint : Transfer__853239164;
-    #Transfer : Transfer__853239164
+    #Approve : Approve__452783945;
+    #Burn : Transfer__598525736;
+    #Mint : Transfer__598525736;
+    #Transfer : Transfer__598525736
   };
-type Subaccount__948579739 = Blob;
-type Timestamp__539690868 = Nat64;
-type Tokens__743263790 = Nat;
-type Transaction__567928135 =
+type Subaccount__870323295 = Blob;
+type Timestamp__931193751 = Nat64;
+type Tokens__746397002 = Nat;
+type Transaction__642986997 =
   {
-    fee : Tokens__743263790;
-    operation : Operation__944480344;
-    timestamp : Timestamp__539690868
+    fee : Tokens__746397002;
+    operation : Operation__25253292;
+    timestamp : Timestamp__931193751
   };
-type TransferSource__125055454 = {#Icrc1Transfer; #Icrc2TransferFrom; #Init};
-type Transfer__853239164 =
+type TransferSource__1004927876 = {#Icrc1Transfer; #Icrc2TransferFrom; #Init};
+type Transfer__598525736 =
   {
-    amount : Tokens__743263790;
-    created_at_time : ?Timestamp__539690868;
-    fee : ?Tokens__743263790;
-    from : Account__710357038;
-    memo : ?Memo__497029250;
-    source : TransferSource__125055454;
-    spender : Account__710357038;
-    to : Account__710357038
+    amount : Tokens__746397002;
+    created_at_time : ?Timestamp__931193751;
+    fee : ?Tokens__746397002;
+    from : Account__479664605;
+    memo : ?Memo__784747104;
+    source : TransferSource__1004927876;
+    spender : Account__479664605;
+    to : Account__479664605
   };
 actor {
-  stable var persistedLog : [Transaction__567928135]
+  stable var persistedLog : [Transaction__642986997]
 };

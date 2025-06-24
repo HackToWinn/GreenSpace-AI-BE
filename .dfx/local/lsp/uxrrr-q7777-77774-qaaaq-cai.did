@@ -21,7 +21,7 @@ type Report =
    rewardGiven: opt float64;
    status: text;
    timestamp: Time;
-   user: opt UserId;
+   user: UserId;
  };
 type Location = 
  record {
@@ -38,7 +38,7 @@ service : {
   getLatestReport: () -> (opt Report);
   getMostReportedCategory: () -> (opt text);
   getReport: (id: text) -> (opt Report);
-  getReportByUser: (userId: UserId) -> (vec Report);
+  getReportByUser: () -> (vec Report);
   getReportsThisWeek: () -> (vec Report);
   getUserById: () -> (opt User);
   getUsers: () -> (vec User);

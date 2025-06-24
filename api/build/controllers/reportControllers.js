@@ -45,34 +45,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processImage = exports.getTotalReportsThisWeek = exports.getReportsThisWeek = exports.getValidReports = exports.storeImageToIPFS = void 0;
+exports.sendReportReward = exports.processImage = exports.getTotalReportsThisWeek = exports.getReportsThisWeek = exports.getValidReports = void 0;
+exports.getMostReportedCategory = getMostReportedCategory;
+exports.getReportById = getReportById;
+exports.getLatestReports = getLatestReports;
 require("dotenv/config");
-const useActor_1 = __importDefault(require("../hooks/useActor"));
+const useActor_1 = require("../hooks/useActor");
 const core_auth_1 = require("@azure/core-auth");
 const ai_vision_image_analysis_1 = __importStar(require("@azure-rest/ai-vision-image-analysis"));
 const groq_sdk_1 = __importDefault(require("groq-sdk"));
 const crypto_1 = require("crypto");
-const w3up = __importStar(require("@web3-storage/w3up-client"));
 const sanitize_1 = require("../utils/sanitize");
-const storeImageToIPFS = (file, req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const client = yield w3up.create();
-        yield client.login(process.env.WEB3_STORAGE_EMAIL);
-        yield client.setCurrentSpace(`did:key:${process.env.WEB3_STORAGE_SPACEKEY}`);
-        const cid = yield client.uploadFile(file);
-        return cid;
-    }
-    catch (error) {
-        res.status(500).json({
-            error: 'Failed to store image',
-            details: error.message
-        });
-    }
-});
-exports.storeImageToIPFS = storeImageToIPFS;
+const principal_1 = require("@dfinity/principal");
+const storeImageToIPFS_1 = require("../utils/storeImageToIPFS");
+const imageBuffer_1 = require("../utils/imageBuffer");
 const getValidReports = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
+        const Actor = yield (0, useActor_1.useBackend)();
         const reports = yield Actor.getValidReports();
         res.json({
             success: true,
@@ -82,15 +71,15 @@ const getValidReports = (req, res) => __awaiter(void 0, void 0, void 0, function
     catch (error) {
         console.error('Error fetching reports:', error);
         res.status(500).json({
-            error: 'Failed to fetch reports',
-            details: error.message
+            error: 'Failed to fetch report',
+            details: error.message,
         });
     }
 });
 exports.getValidReports = getValidReports;
 const getReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
+        const Actor = yield (0, useActor_1.useBackend)();
         const reportsThisWeek = yield Actor.getReportsThisWeek();
         res.json({
             success: true,
@@ -108,7 +97,7 @@ const getReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.getReportsThisWeek = getReportsThisWeek;
 const getTotalReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
+        const Actor = yield (0, useActor_1.useBackend)();
         const totalReportsThisWeek = yield Actor.getReportsThisWeek();
         res.json({
             success: true,
@@ -124,6 +113,19 @@ const getTotalReportsThisWeek = (req, res) => __awaiter(void 0, void 0, void 0, 
     }
 });
 exports.getTotalReportsThisWeek = getTotalReportsThisWeek;
+const countTokenReward = (confidence) => {
+    switch (confidence.toLowerCase()) {
+        case 'high':
+            return 8;
+        case 'medium':
+            return 6;
+        case 'low':
+            return 4;
+        case 'none':
+        default:
+            return 0;
+    }
+};
 const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     if (!req.file) {
@@ -131,18 +133,15 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         return;
     }
     const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
-    const endpoint = process.env.AZURE_COMPUTER_VISION_ENDPOINT;
-    const file = req.file.buffer;
+    const endpoint = process.env.AZURE_COMPUTER_VISION_API_ENDPOINT;
     const location = req.body.location || 'Balikpapan';
     const repId = "rep-" + (0, crypto_1.randomUUID)().toString();
-    const Actor = yield (0, useActor_1.default)({ type: 'Backend' });
+    const Actor = yield (0, useActor_1.useBackend)();
     const groq = new groq_sdk_1.default({ apiKey: process.env.GROQ_API_KEY });
-    const fileObj = new File([file], req.file.originalname || 'image', {
-        type: req.file.mimetype || 'image/jpeg'
-    });
+    const fileObj = (0, imageBuffer_1.imageBuffer)(req);
     const credential = new core_auth_1.AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY);
     const client = (0, ai_vision_image_analysis_1.default)(endpoint, credential);
-    const cid = yield (0, exports.storeImageToIPFS)(fileObj, req, res);
+    const cid = yield (0, storeImageToIPFS_1.storeImageToIPFS)(fileObj, req, res);
     const weatherData = yield fetch(`${process.env.WEATHER_API_URL}/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}`, {
         method: 'GET',
         headers: {
@@ -152,7 +151,7 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const weatherResponse = yield weatherData.json();
     try {
         const result = yield client.path("/imageanalysis:analyze").post({
-            body: file,
+            body: req.file.buffer,
             queryParameters: {
                 features: features,
                 "smartCrops-aspect-ratios": [0.9, 1.33],
@@ -213,6 +212,16 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
         const analysisResult = analysis.choices[0].message.content;
         const parsedAnalysis = JSON.parse(analysisResult || '{}');
+        const confidence = (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.confidence) || 'None';
+        const totalTokenReward = countTokenReward(confidence);
+        if (req.body.user && totalTokenReward > 0) {
+            try {
+                yield (0, exports.sendReportReward)(totalTokenReward);
+            }
+            catch (rewardError) {
+                console.error('Error sending reward:', rewardError);
+            }
+        }
         Actor.addReport(repId, {
             id: repId,
             user: req.body.user || [],
@@ -223,15 +232,16 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             imageCid: (cid === null || cid === void 0 ? void 0 : cid.toString()) || '',
             status: 'valid',
             timestamp: BigInt(new Date().getTime()),
-            confidence: (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.confidence) || 'low',
+            confidence: confidence,
             presentage_confidence: (parsedAnalysis === null || parsedAnalysis === void 0 ? void 0 : parsedAnalysis.presentage_confidence) || '0%',
-            rewardGiven: [],
+            rewardGiven: [totalTokenReward],
         });
         res.json({
             status: 'success',
         });
     }
     catch (error) {
+        console.error('Error processing image:', error);
         res.status(500).json({
             error: 'Failed to process image',
             details: error.message
@@ -239,3 +249,88 @@ const processImage = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.processImage = processImage;
+const sendReportReward = (tokenAmount) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const Actor = yield (0, useActor_1.useToken)();
+        const Reward = yield Actor.icrc1_transfer({
+            from_subaccount: [],
+            to: {
+                owner: principal_1.Principal.fromText('3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe'),
+                subaccount: []
+            },
+            amount: BigInt(tokenAmount),
+            fee: [],
+            memo: [],
+            created_at_time: []
+        });
+        return Reward;
+    }
+    catch (error) {
+        console.error('Error sending token reward:', error);
+        throw new Error(`Failed to send token reward: ${error.message}`);
+    }
+});
+exports.sendReportReward = sendReportReward;
+function getMostReportedCategory(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const Actor = yield (0, useActor_1.useBackend)();
+            const mostReportedCategory = yield Actor.getMostReportedCategory();
+            res.json({
+                success: true,
+                category: mostReportedCategory
+            });
+        }
+        catch (error) {
+            console.error('Error fetching most reported category:', error);
+            res.status(500).json({
+                error: 'Failed to fetch most reported category',
+                details: error.message
+            });
+        }
+    });
+}
+function getReportById(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const reportId = req.params.id;
+        try {
+            const Actor = yield (0, useActor_1.useBackend)();
+            const report = yield Actor.getReport(reportId);
+            if (!report) {
+                return res.status(404).json({
+                    error: 'Report not found'
+                });
+            }
+            res.json({
+                success: true,
+                report: (0, sanitize_1.sanitize)(report)
+            });
+        }
+        catch (error) {
+            console.error('Error fetching report by ID:', error);
+            res.status(500).json({
+                error: 'Failed to fetch report by ID',
+                details: error.message
+            });
+        }
+    });
+}
+function getLatestReports(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const Actor = yield (0, useActor_1.useBackend)();
+            const latestReports = yield Actor.getLatestReport();
+            res.json({
+                success: true,
+                reports: (0, sanitize_1.sanitize)(latestReports)
+            });
+        }
+        catch (error) {
+            console.error('Error fetching latest reports:', error);
+            res.status(500).json({
+                error: 'Failed to fetch latest reports',
+                details: error.message
+            });
+        }
+    });
+}

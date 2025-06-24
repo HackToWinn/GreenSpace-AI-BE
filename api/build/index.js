@@ -15,7 +15,7 @@ const PORT = process.env.EXPRESS_PORT || 3001;
 app.use((0, cors_1.default)());
 app.use((0, morgan_1.default)("dev"));
 app.use(express_1.default.json());
-app.use(express_1.default.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.path}`);
     next();
@@ -24,8 +24,8 @@ app.use((req, res, next) => {
 app.get("/", (_req, res) => {
     res.send("Hello World!");
 });
-app.use("/api/v1/user", userRoutes_1.default);
 app.use("/api/v1/report", reportRoutes_1.default);
+app.use("/api/v1/user", userRoutes_1.default);
 app.use((err, req, res, next) => {
     console.error('❌ Unhandled error:', err);
     res.status(500).json({

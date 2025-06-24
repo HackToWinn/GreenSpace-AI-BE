@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const userControllers_1 = require("../controllers/userControllers");
+const uploadImageMulter_1 = require("../utils/uploadImageMulter");
 const router = (0, express_1.Router)();
-router.get('/', userControllers_1.getUser);
+router.post('/create', uploadImageMulter_1.upload.single('picture'), userControllers_1.addUser);
+router.post('/update', uploadImageMulter_1.upload.single('picture'), userControllers_1.updateUser);
+router.post('/get', userControllers_1.getUser);
 exports.default = router;

@@ -9,16 +9,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = useActor;
+exports.useBackend = useBackend;
+exports.useToken = useToken;
 const backend_1 = require("../../../src/declarations/backend");
 const icrc1_1 = require("../../../src/declarations/icrc1");
-function useActor(_a) {
-    return __awaiter(this, arguments, void 0, function* ({ type }) {
-        const actor = (0, backend_1.createActor)(type === 'Backend' ? backend_1.canisterId : icrc1_1.canisterId, {
+function useBackend(identity) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return (0, backend_1.createActor)(process.env.CANISTER_ID_BACKEND || backend_1.canisterId, {
+            agentOptions: {
+                host: 'http://127.0.0.1:4943',
+                identity: identity
+            },
+        });
+    });
+}
+function useToken() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return (0, icrc1_1.createActor)(process.env.CANISTER_ID_ICRC1 || icrc1_1.canisterId, {
             agentOptions: {
                 host: 'http://127.0.0.1:4943',
             },
         });
-        return actor;
     });
 }
