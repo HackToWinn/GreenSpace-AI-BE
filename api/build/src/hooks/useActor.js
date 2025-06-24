@@ -11,16 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.useBackend = useBackend;
 exports.useToken = useToken;
-<<<<<<< HEAD
-const backend_1 = require("../../../src/declarations/backend");
-const icrc1_1 = require("../../../src/declarations/icrc1");
-function useBackend(identity) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return (0, backend_1.createActor)(process.env.CANISTER_ID_BACKEND || backend_1.canisterId, {
-            agentOptions: {
-                host: 'http://127.0.0.1:4943',
-                identity: identity
-=======
 const identity_1 = require("@dfinity/identity");
 const backend_1 = require("../../../src/declarations/backend");
 const icrc1_1 = require("../../../src/declarations/icrc1");
@@ -40,7 +30,6 @@ function useBackend(identity, delegation) {
             agentOptions: {
                 host: 'http://127.0.0.1:4943',
                 identity: delegationIdentity,
->>>>>>> 2134e1270b0da5d3131b2c2432bf161e4211632a
             },
         });
     });

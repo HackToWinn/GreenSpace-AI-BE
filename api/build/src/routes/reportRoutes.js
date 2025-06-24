@@ -10,8 +10,5 @@ router.get('/week', reportControllers_1.getReportsThisWeek); //ok
 router.get('/most/category', reportControllers_1.getMostReportedCategory); //ok
 router.get('/:id', reportControllers_1.getReportById); //ok
 router.get('/latest', reportControllers_1.getLatestReports); //ok
-<<<<<<< HEAD
-=======
 router.post('/my-report', uploadImageMulter_1.upload.none(), reportControllers_1.getMyReport); //ok
->>>>>>> 2134e1270b0da5d3131b2c2432bf161e4211632a
 exports.default = router;

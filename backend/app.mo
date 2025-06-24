@@ -11,7 +11,7 @@ import Principal "mo:base/Principal";
 
 
 actor {
-    var users = BTree.init<Text, Types.User>(?24);
+    var users = BTree.init<Principal, Types.User>(?24);
     var reports = BTree.init<Text, Types.Report>(?24);
      
     public shared(msg) func addReport(id: Text, report: Types.Report) : async () {
@@ -27,7 +27,8 @@ actor {
         return await Report.getReportById(id, reports);
     };
     public shared(msg) func getReportByUser() : async [Types.Report] {
-        return await Report.getReportByUser(msg.caller, reports);
+        let results = await Report.getReportByUser(msg.caller, reports, users);
+        return Array.map(results, func (r: { report: Types.Report }) : Types.Report { r.report });
     };
     public func getLatestReport() : async ?Types.Report {
         return await Report.getLatestReport(reports);
