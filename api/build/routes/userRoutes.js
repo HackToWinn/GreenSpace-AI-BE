@@ -6,10 +6,6 @@ const uploadImageMulter_1 = require("../utils/uploadImageMulter");
 const router = (0, express_1.Router)();
 router.post('/create', uploadImageMulter_1.upload.single('picture'), userControllers_1.addUser);
 router.post('/update', uploadImageMulter_1.upload.single('picture'), userControllers_1.updateUser);
-<<<<<<< HEAD
-router.post('/get', userControllers_1.getUser);
-=======
 router.post('/get', uploadImageMulter_1.upload.none(), userControllers_1.getUser);
 router.post('/get/all', userControllers_1.getUsers);
->>>>>>> 2134e1270b0da5d3131b2c2432bf161e4211632a
 exports.default = router;
