@@ -47,8 +47,8 @@ actor {
         return await User.addUser(users, msg.caller, {email = email; username = username; pictureCid = pictureCid});
     };
 
-    public shared(msg) func getUserById() : async ?Types.User {
-        return await User.getUserById(users, msg.caller);
+    public shared(msg) func getMyProfile() : async ?Types.User {
+        return await User.getMyProfile(users, msg.caller);
     };
 
     public shared(msg) func getUsers() : async [Types.User] {

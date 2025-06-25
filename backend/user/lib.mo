@@ -52,7 +52,7 @@ module {
       error = null;
     };
   };
-  public func getUserById(
+  public func getMyProfile(
     users : BTree.BTree<Principal, Types.User>,
     userId : Principal,
   ) : async ?Types.User {
