@@ -5,6 +5,8 @@ import { imageBuffer } from "../utils/imageBuffer";
 import { sanitize } from "../utils/sanitize";
 import { internalError } from "../lib/internalError";
 import { badRequest } from "../lib/badRequest";
+import { Principal } from "@dfinity/principal";
+import { Ed25519KeyIdentity } from "@dfinity/identity";
 
 
 // Create user
@@ -102,4 +104,12 @@ export async function getUsers(req: Request, res: Response) {
   } catch (error) {
     return internalError(res, "Failed to fetch users", error);
   }
+}
+
+
+
+export async function getPrincipal(identity: Ed25519KeyIdentity, delegation: string): Promise<Principal>  {
+    const actor = await useBackend(identity, delegation);
+    const principal = actor.whoami();
+    return principal;
 }

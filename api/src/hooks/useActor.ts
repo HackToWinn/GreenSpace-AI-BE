@@ -7,6 +7,10 @@ import {
   canisterId as backendCanister,
   createActor as backendActor,
 } from '../../../src/declarations/backend';
+import {
+  canisterId as tokenCanister,
+  createActor as tokenActor,
+} from '../../../src/declarations/gsp_ledger';
 
 
 export async function useBackend(
@@ -36,16 +40,16 @@ export async function useBackend(
 
   return backendActor(process.env.CANISTER_ID_BACKEND || backendCanister, {
     agentOptions: {
-      host: process.env.AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
+      host: process.env.TOKEN_AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
       identity: delegationIdentity,
     },
   });
 }
 
-// export async function useToken() {
-//   return tokenActor(process.env.CANISTER_ID_ICRC1 || tokenCanister, {
-//     agentOptions: {
-//       host: process.env.AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
-//     },
-//   });
-// }
+export async function useToken() {
+  return tokenActor(process.env.CANISTER_ID_ICRC1 || tokenCanister, {
+    agentOptions: {
+      host: process.env.TOKEN_AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gr64m-2yaaa-aaaaj-a2dda-cai',
+    },
+  });
+}
