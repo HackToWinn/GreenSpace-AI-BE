@@ -5,6 +5,7 @@ import Buffer "mo:base/Buffer";
 import Time "mo:base/Time";
 import Array "mo:base/Array";
 import Principal "mo:base/Principal";
+import Debug "mo:base/Debug";
 
 module {
   public func addReport(id : Text, report : Types.Report, reports : BTree.BTree<Text, Types.Report>, principal: Types.UserId) : async () {
@@ -72,8 +73,12 @@ module {
   public func getReportByUser(user : Principal, reports : BTree.BTree<Text, Types.Report>, users : BTree.BTree<Principal, Types.User>) : async [{ report : Types.Report; user : ?Types.User }] {
     let resultBuffer = Buffer.Buffer<{ report : Types.Report; user : ?Types.User }>(0);
     for ((key, report) in BTree.entries(reports)) {
+      Debug.print(debug_show(report));
       if (report.user == user) {
-        let userData = BTree.get(users, Principal.compare, user);
+        Debug.print("Im Here");
+        
+        let userData = BTree.get(users, Principal.compare, report.user);
+        Debug.print(debug_show(userData));
         resultBuffer.add({ report = report; user = userData });
       };
     };

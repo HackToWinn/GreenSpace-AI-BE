@@ -1,5 +1,5 @@
 import e, { Request, Response } from "express";
-import { storeImageToIPFS } from "../utils/storeImageToIPFS";
+import { storeImageToStorage } from "../utils/storeImageToStorage";
 import { useBackend } from "../hooks/useActor";
 import { imageBuffer } from "../utils/imageBuffer";
 import { sanitize } from "../utils/sanitize";
@@ -20,7 +20,6 @@ export async function addUser(req: Request, res: Response) {
   if (!delegation || !identity)
     return badRequest(res, "Missing required fields: delegation and identity");
 
-  let pictureCidString = "";
 
   try {
     // --- Measure buffer extraction
@@ -28,13 +27,12 @@ export async function addUser(req: Request, res: Response) {
     const picture = imageBuffer(req);
     console.timeEnd('buffer_extraction');
 
-    // --- Measure IPFS upload
-    console.time('ipfs_upload');
-    const pictureCid = await storeImageToIPFS(picture, req, res);
-    console.timeEnd('ipfs_upload');
+    // --- Measure Azure Blob Storage upload
+    console.time('azure_upload');
+    const pictureUrl = await storeImageToStorage(req.file, req, res, 'users');
+    console.timeEnd('azure_upload');
 
-    if (!pictureCid) return internalError(res, "Failed to store picture to IPFS");
-    pictureCidString = pictureCid.toString();
+    if (!pictureUrl) return internalError(res, "Failed to store picture to Storage");
 
     // --- Measure Actor creation
     console.time('actor_creation');
@@ -43,7 +41,7 @@ export async function addUser(req: Request, res: Response) {
 
     // --- Measure canister call
     console.time('canister_call');
-    await Actor.addUser(email, username, pictureCidString);
+    await Actor.addUser(email, username, pictureUrl);
     console.timeEnd('canister_call');
 
     res.status(200).json({ message: "User created successfully" });
@@ -62,18 +60,16 @@ export async function updateUser(req: Request, res: Response) {
   if (!delegation)
     return badRequest(res, "Missing required field: delegation is required");
 
-  let pictureCidString = "";
+  let pictureUrl = "";
   try {
     if (req.file) {
-      const picture = imageBuffer(req);
-      console.time("storeImageToIPFS");
-      const pictureCid = await storeImageToIPFS(picture, req, res);
-      console.timeEnd("storeImageToIPFS");
-      if (!pictureCid) return internalError(res, "Failed to store picture to IPFS");
-      pictureCidString = pictureCid.toString();
+
+      const uploadedUrl = await storeImageToStorage(req.file, req, res, 'users');
+      if (!uploadedUrl) return internalError(res, "Failed to store picture to Azure Blob Storage");
+      pictureUrl = uploadedUrl;
     }
     const Actor = await useBackend(identity, delegation);
-    await Actor.updateUser(email, username, pictureCidString ? [pictureCidString] : []);
+    await Actor.updateUser(email, username, pictureUrl ? [pictureUrl] : []);
     res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
     return internalError(res, "Failed to update user", error);
