@@ -83,7 +83,7 @@ export async function getUser(req: Request, res: Response) {
     return badRequest(res, "Missing required fields: delegation and identity");
   try {
     const Actor = await useBackend(identity, delegation);
-    const user = await Actor.getUserById();
+    const user = await Actor.getUsersByID();
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json(sanitize(user));
   } catch (error) {
