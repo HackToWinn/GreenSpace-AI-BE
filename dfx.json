@@ -3,12 +3,18 @@
     "backend": {
       "main": "backend/app.mo",
       "type": "motoko",
-      "args": "--enhanced-orthogonal-persistence"
+      "args": "--enhanced-orthogonal-persistence",
+      "declarations": {
+        "output": "api/src/declarations/backend"
+      }
     },
     "gsp_ledger": {
       "type": "motoko",
       "main": "backend/ledger/main.mo",
-      "init_arg_file": "backend/ledger/init_arg.did"
+      "init_arg_file": "backend/ledger/init_arg.did",
+      "declarations": {
+        "output": "api/src/declarations/gsp_ledger"
+      }
     }
   },
   "output_env_file": "./api/.env",

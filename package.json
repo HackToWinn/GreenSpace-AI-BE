@@ -7,18 +7,6 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
-  "workspaces": [
-    "api"
-  ],
-  "dependencies": {
-    "@azure/storage-blob": "^12.27.0",
-    "@huggingface/inference": "^4.0.4",
-    "@storacha/client": "^1.4.0",
-    "body-parser": "^2.2.0",
-    "connect-timeout": "^1.9.0",
-    "groq-sdk": "^0.25.0",
-    "uuid": "^11.1.0"
-  },
   "devDependencies": {
     "prettier": "^3.5.3",
     "prettier-plugin-motoko": "^0.11.0"

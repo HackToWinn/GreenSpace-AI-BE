@@ -46,6 +46,7 @@ export interface _SERVICE {
     [[] | [string], [] | [string], [] | [string]],
     { 'error' : [] | [string], 'success' : boolean }
   >,
+  'whoami' : ActorMethod<[], Principal>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];
