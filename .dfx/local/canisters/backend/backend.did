@@ -7,6 +7,12 @@ type User =
    pictureCid: text;
    username: text;
  };
+type TrendData = 
+ record {
+   category: text;
+   timestamp: int;
+   value: float64;
+ };
 type Time = int;
 type Report = 
  record {
@@ -35,16 +41,21 @@ service : {
       error: opt text;
       success: bool;
     });
+  getCategoryByYear: (year: int) -> (vec TrendData);
+  getDailyTrends: () -> (vec TrendData);
   getLatestReport: () -> (opt Report);
+  getMonthlyTrends: () -> (vec TrendData);
   getMostReportedCategory: () -> (opt text);
   getMyProfile: () -> (opt User);
   getReport: (id: text) -> (opt Report);
   getReportByUser: () -> (vec Report);
   getReportsThisWeek: () -> (vec Report);
+  getTrendsByCategory: (category: text) -> (vec TrendData);
   getUsers: () -> (vec User);
   getValidReportCount: () -> (nat);
   getValidReports: () -> (vec Report);
   getValidWeeklyReportCount: () -> (nat);
+  getWeeklyTrends: () -> (vec TrendData);
   updateUser: (email: opt text, username: opt text, pictureCid: opt text) ->
    (record {
       error: opt text;

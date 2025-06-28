@@ -18,6 +18,11 @@ export interface Report {
   'coordinates' : Location,
 }
 export type Time = bigint;
+export interface TrendData {
+  'value' : number,
+  'timestamp' : bigint,
+  'category' : string,
+}
 export interface User {
   'id' : UserId,
   'username' : string,
@@ -32,16 +37,21 @@ export interface _SERVICE {
     [string, string, string],
     { 'error' : [] | [string], 'success' : boolean }
   >,
+  'getCategoryByYear' : ActorMethod<[bigint], Array<TrendData>>,
+  'getDailyTrends' : ActorMethod<[], Array<TrendData>>,
   'getLatestReport' : ActorMethod<[], [] | [Report]>,
+  'getMonthlyTrends' : ActorMethod<[], Array<TrendData>>,
   'getMostReportedCategory' : ActorMethod<[], [] | [string]>,
   'getMyProfile' : ActorMethod<[], [] | [User]>,
   'getReport' : ActorMethod<[string], [] | [Report]>,
   'getReportByUser' : ActorMethod<[], Array<Report>>,
   'getReportsThisWeek' : ActorMethod<[], Array<Report>>,
+  'getTrendsByCategory' : ActorMethod<[string], Array<TrendData>>,
   'getUsers' : ActorMethod<[], Array<User>>,
   'getValidReportCount' : ActorMethod<[], bigint>,
   'getValidReports' : ActorMethod<[], Array<Report>>,
   'getValidWeeklyReportCount' : ActorMethod<[], bigint>,
+  'getWeeklyTrends' : ActorMethod<[], Array<TrendData>>,
   'updateUser' : ActorMethod<
     [[] | [string], [] | [string], [] | [string]],
     { 'error' : [] | [string], 'success' : boolean }

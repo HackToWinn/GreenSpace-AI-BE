@@ -8,7 +8,6 @@ import {
   createActor as backendActor,
 } from '../../../src/declarations/backend';
 
-
 export async function useBackend(
   identity?: Ed25519KeyIdentity,
   delegation?: DelegationChain | string
@@ -36,7 +35,9 @@ export async function useBackend(
 
   return backendActor(process.env.CANISTER_ID_BACKEND || backendCanister, {
     agentOptions: {
-      host: process.env.AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
+      host:
+        process.env.AGENT_HOST ||
+        'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gk3aj-aaaaa-aaaaj-a2dbq-cai',
       identity: delegationIdentity,
     },
   });

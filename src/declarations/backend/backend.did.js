@@ -19,6 +19,11 @@ export const idlFactory = ({ IDL }) => {
     'location' : IDL.Text,
     'coordinates' : Location,
   });
+  const TrendData = IDL.Record({
+    'value' : IDL.Float64,
+    'timestamp' : IDL.Int,
+    'category' : IDL.Text,
+  });
   const User = IDL.Record({
     'id' : UserId,
     'username' : IDL.Text,
@@ -33,16 +38,21 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
         [],
       ),
+    'getCategoryByYear' : IDL.Func([IDL.Int], [IDL.Vec(TrendData)], []),
+    'getDailyTrends' : IDL.Func([], [IDL.Vec(TrendData)], []),
     'getLatestReport' : IDL.Func([], [IDL.Opt(Report)], []),
+    'getMonthlyTrends' : IDL.Func([], [IDL.Vec(TrendData)], []),
     'getMostReportedCategory' : IDL.Func([], [IDL.Opt(IDL.Text)], []),
     'getMyProfile' : IDL.Func([], [IDL.Opt(User)], []),
     'getReport' : IDL.Func([IDL.Text], [IDL.Opt(Report)], []),
     'getReportByUser' : IDL.Func([], [IDL.Vec(Report)], []),
     'getReportsThisWeek' : IDL.Func([], [IDL.Vec(Report)], []),
+    'getTrendsByCategory' : IDL.Func([IDL.Text], [IDL.Vec(TrendData)], []),
     'getUsers' : IDL.Func([], [IDL.Vec(User)], []),
     'getValidReportCount' : IDL.Func([], [IDL.Nat], []),
     'getValidReports' : IDL.Func([], [IDL.Vec(Report)], []),
     'getValidWeeklyReportCount' : IDL.Func([], [IDL.Nat], []),
+    'getWeeklyTrends' : IDL.Func([], [IDL.Vec(TrendData)], []),
     'updateUser' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
         [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],

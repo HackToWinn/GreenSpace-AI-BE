@@ -4,7 +4,7 @@ module {
   public type UserId = Principal;
   public type User = {
     id : UserId;
-    pictureCid: Text;    
+    pictureCid : Text;
     username : Text;
     email : Text;
     joinedAt : Time.Time;
@@ -30,9 +30,16 @@ module {
 
   public type Comment = {
     id : Text;
-    reportId: Text;
-    message: Text;
-    userId: UserId;
-    rating: Float;
-  }
+    reportId : Text;
+    message : Text;
+    userId : UserId;
+    rating : Float;
+  };
+
+  public type TrendData = {
+    timestamp : Int;
+    value : Float;
+    category : Text;
+  };
+
 };
