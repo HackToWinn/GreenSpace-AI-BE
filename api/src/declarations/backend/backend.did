@@ -50,4 +50,5 @@ service : {
       error: opt text;
       success: bool;
     });
+  whoami: () -> (principal);
 }

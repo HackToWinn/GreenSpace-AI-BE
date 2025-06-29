@@ -61,8 +61,8 @@ actor {
             pictureCid = pictureCid;
         });
     };
+    public shared(msg) func whoami() : async Principal {
+        return msg.caller;
+    };
 
-
-
-  
 }

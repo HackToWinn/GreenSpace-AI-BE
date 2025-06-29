@@ -48,6 +48,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
         [],
       ),
+    'whoami' : IDL.Func([], [IDL.Principal], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

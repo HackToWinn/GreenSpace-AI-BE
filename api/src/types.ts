@@ -1,20 +1,20 @@
 export interface Report {
   id: string;
-  user: string; 
+  user: string;
   category: string;
   description: string;
   location: string;
   coordinates: Location;
   imageCid: string;
-  timestamp: Date; 
+  timestamp: Date;
   status: string;
   rewardGiven: number | null;
 }
 
-export interface Comment{
+export interface Comment {
   id: string;
   reportId: string;
-  rating: number; 
+  rating: number;
 }
 
 export interface Reward {
