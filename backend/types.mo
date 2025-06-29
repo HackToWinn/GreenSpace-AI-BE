@@ -18,6 +18,7 @@ module {
     user : UserId;
     category : Text;
     description : Text;
+    title : Text;
     confidence : Text;
     presentage_confidence : Text;
     location : Text;

@@ -6,7 +6,6 @@ export interface Location { 'latitude' : number, 'longitude' : number }
 export interface Report {
   'id' : string,
   'status' : string,
-  'title' : string,
   'user' : UserId,
   'description' : string,
   'imageCid' : string,
@@ -33,7 +32,7 @@ export interface _SERVICE {
     [string, string, string],
     { 'error' : [] | [string], 'success' : boolean }
   >,
-  'getLatestReports' : ActorMethod<[], Array<Report>>,
+  'getLatestReport' : ActorMethod<[], [] | [Report]>,
   'getMostReportedCategory' : ActorMethod<[], [] | [string]>,
   'getMyProfile' : ActorMethod<[], [] | [User]>,
   'getReport' : ActorMethod<[string], [] | [Report]>,

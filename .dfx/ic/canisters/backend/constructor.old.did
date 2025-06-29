@@ -21,7 +21,6 @@ type Report =
    rewardGiven: opt float64;
    status: text;
    timestamp: Time;
-   title: text;
    user: UserId;
  };
 type Location = 

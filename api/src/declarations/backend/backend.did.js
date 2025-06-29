@@ -8,6 +8,7 @@ export const idlFactory = ({ IDL }) => {
   const Report = IDL.Record({
     'id' : IDL.Text,
     'status' : IDL.Text,
+    'title' : IDL.Text,
     'user' : UserId,
     'description' : IDL.Text,
     'imageCid' : IDL.Text,
@@ -33,7 +34,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Record({ 'error' : IDL.Opt(IDL.Text), 'success' : IDL.Bool })],
         [],
       ),
-    'getLatestReport' : IDL.Func([], [IDL.Opt(Report)], []),
+    'getLatestReports' : IDL.Func([], [IDL.Vec(Report)], []),
     'getMostReportedCategory' : IDL.Func([], [IDL.Opt(IDL.Text)], []),
     'getMyProfile' : IDL.Func([], [IDL.Opt(User)], []),
     'getReport' : IDL.Func([IDL.Text], [IDL.Opt(Report)], []),

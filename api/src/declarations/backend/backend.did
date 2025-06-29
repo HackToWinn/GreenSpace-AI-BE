@@ -21,6 +21,7 @@ type Report =
    rewardGiven: opt float64;
    status: text;
    timestamp: Time;
+   title: text;
    user: UserId;
  };
 type Location = 
@@ -35,7 +36,7 @@ service : {
       error: opt text;
       success: bool;
     });
-  getLatestReport: () -> (opt Report);
+  getLatestReports: () -> (vec Report);
   getMostReportedCategory: () -> (opt text);
   getMyProfile: () -> (opt User);
   getReport: (id: text) -> (opt Report);
