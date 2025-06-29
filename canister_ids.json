@@ -1,5 +1,8 @@
 {
   "backend": {
     "ic": "gk3aj-aaaaa-aaaaj-a2dbq-cai"
+  },
+  "gsp_ledger": {
+    "ic": "gr64m-2yaaa-aaaaj-a2dda-cai"
   }
 }
