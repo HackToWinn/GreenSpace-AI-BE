@@ -8,12 +8,13 @@ import Principal "mo:base/Principal";
 import Debug "mo:base/Debug";
 
 module {
-  public func addReport(id : Text, report : Types.Report, reports : BTree.BTree<Text, Types.Report>, principal: Types.UserId) : async () {
+  public func addReport(id : Text, report : Types.Report, reports : BTree.BTree<Text, Types.Report>, principal : Types.UserId) : async () {
     let currentTime = Time.now();
 
     let newReport : Types.Report = {
       id = report.id;
       user = principal;
+      title = report.title;
       category = report.category;
       description = report.description;
       confidence = report.confidence;
@@ -70,39 +71,42 @@ module {
   public func getReportById(id : Text, reports : BTree.BTree<Text, Types.Report>) : async ?Types.Report {
     BTree.get<Text, Types.Report>(reports, Text.compare, id);
   };
-  public func getReportByUser(user : Principal, reports : BTree.BTree<Text, Types.Report>, users : BTree.BTree<Principal, Types.User>) : async [{ report : Types.Report; user : ?Types.User }] {
+  public func getReportByUser(user : Principal, reports : BTree.BTree<Text, Types.Report>, users : BTree.BTree<Principal, Types.User>) : async [{
+    report : Types.Report;
+    user : ?Types.User;
+  }] {
     let resultBuffer = Buffer.Buffer<{ report : Types.Report; user : ?Types.User }>(0);
     for ((key, report) in BTree.entries(reports)) {
-      Debug.print(debug_show(report));
       if (report.user == user) {
-        Debug.print("Im Here");
-        
         let userData = BTree.get(users, Principal.compare, report.user);
-        Debug.print(debug_show(userData));
         resultBuffer.add({ report = report; user = userData });
       };
     };
     return Buffer.toArray(resultBuffer);
   };
-  public func getLatestReport(reports : BTree.BTree<Text, Types.Report>) : async ?Types.Report {
-    // Find the most recently submitted report (with the highest timestamp)
-    var latestReport : ?Types.Report = null;
+  public func getLatestReports(reports : BTree.BTree<Text, Types.Report>) : async [Types.Report] {
+    // Get all reports and sort them by timestamp (newest first)
+    let resultBuffer = Buffer.Buffer<Types.Report>(0);
+
+    // Collect all valid reports
     for ((_, report) in BTree.entries(reports)) {
-      // Only consider valid reports
       if (isValidReport(report)) {
-        switch (latestReport) {
-          case (?currentLatest) {
-            if (report.timestamp > currentLatest.timestamp) {
-              latestReport := ?report;
-            };
-          };
-          case (null) {
-            latestReport := ?report;
-          };
-        };
+        resultBuffer.add(report);
       };
     };
-    return latestReport;
+
+    // Convert to array and sort by timestamp (newest first)
+    let reportsArray = Buffer.toArray(resultBuffer);
+    let sortedReports = Array.sort(
+      reportsArray,
+      func(a : Types.Report, b : Types.Report) : { #less; #equal; #greater } {
+        if (a.timestamp > b.timestamp) { #less } else if (a.timestamp < b.timestamp) {
+          #greater;
+        } else { #equal };
+      },
+    );
+
+    return sortedReports;
   };
   public func getValidReportCount(reports : BTree.BTree<Text, Types.Report>) : async Nat {
     var count : Nat = 0;
@@ -129,11 +133,11 @@ module {
   };
   public func getMostReportedCategory(reports : BTree.BTree<Text, Types.Report>) : async ?Text {
     let categoryCount = BTree.init<Text, Nat>(?24);
-    
+
     // Count occurrences of each category
     for ((_, report) in BTree.entries(reports)) {
       if (isValidReport(report)) {
-        let currentCount = switch(BTree.get(categoryCount, Text.compare, report.category)) {
+        let currentCount = switch (BTree.get(categoryCount, Text.compare, report.category)) {
           case null 0;
           case (?count) count;
         };
@@ -141,7 +145,7 @@ module {
           categoryCount,
           Text.compare,
           report.category,
-          currentCount + 1
+          currentCount + 1,
         );
       };
     };

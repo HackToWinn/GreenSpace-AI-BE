@@ -2,12 +2,9 @@ import { Request, Response } from "express";
 import { useBackend, useToken } from "../hooks/useActor";
 import { getPrincipal } from "./userControllers";
 import { internalError } from "../lib/internalError";
-import { Principal } from "@dfinity/principal";
 import { Account } from "../declarations/gsp_ledger/gsp_ledger.did";
 import { sanitize } from "../utils/sanitize";
 import { DelegationChain, Ed25519KeyIdentity } from "@dfinity/identity";
-import { AccountIdentifier } from "@dfinity/ledger-icp";
-import { encodeIcrcAccount } from "@dfinity/ledger-icrc";
 import { loadIdentityFromSecp256k1PemString } from "../lib/loadIdentityFromSecp256k1PemString";
 
 

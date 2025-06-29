@@ -18,8 +18,6 @@
     "@dfinity/agent": "^2.4.1",
     "@dfinity/candid": "^2.4.1",
     "@dfinity/identity-secp256k1": "^2.4.1",
-    "@dfinity/ledger-icp": "^3.0.0",
-    "@dfinity/ledger-icrc": "^2.9.0",
     "@dfinity/principal": "^2.4.1",
     "@dfinity/utils": "^2.13.1"
   }
