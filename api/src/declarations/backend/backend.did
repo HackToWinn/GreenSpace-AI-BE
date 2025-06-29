@@ -37,10 +37,10 @@ service : {
     });
   getLatestReport: () -> (opt Report);
   getMostReportedCategory: () -> (opt text);
+  getMyProfile: () -> (opt User);
   getReport: (id: text) -> (opt Report);
   getReportByUser: () -> (vec Report);
   getReportsThisWeek: () -> (vec Report);
-  getUserById: () -> (opt User);
   getUsers: () -> (vec User);
   getValidReportCount: () -> (nat);
   getValidReports: () -> (vec Report);
