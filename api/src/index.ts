@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import userRoutes from './routes/userRoutes';
 import reportRoutes from './routes/reportRoutes';
 import trendRoutes from './routes/trendRoutes';
+import tokenRoutes from './routes/tokenRoutes'
 import bodyParser from 'body-parser';
 
 dotenv.config();
@@ -29,16 +30,17 @@ app.get('/', (_req: Request, res: Response) => {
 });
 app.use('/api/v1/report', reportRoutes);
 app.use('/api/v1/user', userRoutes);
+app.use("/api/v1/user/token", tokenRoutes);
 app.use('/api/v1/trend', trendRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('❌ Unhandled error:', err);
-  res.status(500).json({
-    error: 'Internal server error',
-    details: err.message,
-  });
+    console.error('❌ Unhandled error:', err);
+    res.status(500).json({
+        error: 'Internal server error',
+        details: err.message
+    });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

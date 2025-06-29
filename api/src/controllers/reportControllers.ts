@@ -9,6 +9,7 @@ import { sanitize } from '../utils/sanitize';
 import { Principal } from '@dfinity/principal';
 import { storeImageToStorage } from '../utils/storeImageToStorage';
 import { imageBuffer } from '../utils/imageBuffer';
+import { giveReward } from './tokenControllers';
 
 // ---------- Helper for Error Response ----------
 function errorResponse(res: Response, msg: string, error?: unknown, code = 500) {
@@ -68,7 +69,10 @@ const countTokenReward = (confidence: string): number => {
 export const processImage = async (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-  const { identity, delegation, location = 'Balikpapan', user, coordinates } = req.body;
+
+  const { identity, delegation, location = 'Balikpapan' } = req.body;
+
+  const locationData = typeof location === 'string' ? JSON.parse(location) : location;
   const features = ["Caption", "DenseCaptions", "Tags", "Objects"];
   const endpoint = process.env.AZURE_COMPUTER_VISION_API_ENDPOINT!;
   const credential = new AzureKeyCredential(process.env.AZURE_COMPUTER_VISION_API_KEY!);
@@ -82,8 +86,7 @@ export const processImage = async (req: Request, res: Response) => {
 
   // Fetch weather data
   const weatherData = await fetch(
-    `${process.env.WEATHER_API_URL}/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}`
-  );
+    `${process.env.WEATHER_API_URL}/current.json?key=${process.env.WEATHER_API_KEY}&q=${locationData.latitude || 0},${locationData.longitude || 0}`);
   const weatherResponse = await weatherData.json();
 
   try {
@@ -102,29 +105,41 @@ export const processImage = async (req: Request, res: Response) => {
     const PromptRoleSystem =
       "You are an expert in disaster prediction and image analysis. Provide comprehensive, step-by-step analysis of images for disaster detection and prediction.";
     const PromptRoleUser = `
-      Analyze the following image data and weather information in a step-by-step manner:
-      Image Analysis Data: ${JSON.stringify(result.body)}
-      Weather Data: ${JSON.stringify(weatherResponse)}
-      Location: ${location}
-      - Analyze the location context...
-      - Consider the current weather conditions...
-      - Identify geographical/environmental factors...
-      - Note any location-specific vulnerabilities...
-      Validate the Image:
-      - Check if clear/not blurry...
-      - Verify environmental/geographical features...
-      - Confirm image quality...
-      - Determine content appropriateness...
-      Provide output as JSON:
+      You are an AI expert in environmental risk analysis. Your primary task is to determine if an image shows an outdoor environmental condition that could indicate an anomaly or a natural disaster, based on the provided image, weather, and location data.
+
+      DATA FOR ANALYSIS:
+      1. Image Analysis Data: ${JSON.stringify(result.body)}
+      2. Weather Data: ${JSON.stringify(weatherResponse)}
+      3. Image Location: ${location}
+
+      FOLLOW THIS STEP-BY-STEP PROCESS:
+
+      STEP 1: CRITICAL IMAGE VALIDATION
+      This is the most crucial step. You must validate the image against the following criteria:
+      - Was the image taken OUTDOORS? This is a MANDATORY requirement. Images clearly taken INDOORS (e.g., inside an office, a house, a bedroom, or any other building interior) are automatically INVALID.
+      - Is the image clear and not blurry? A severely blurry image is INVALID.
+      - Is the image content relevant for environmental analysis? Images like selfies, food pictures, or objects unrelated to the environment are INVALID.
+
+      STEP 2: DETERMINE OUTPUT BASED ON VALIDATION
+      - IF THE IMAGE IS INVALID (because it's indoors, blurry, or irrelevant): Immediately stop the analysis. Directly provide the JSON output with an "invalid" status. Briefly explain the reason in the "description" field (e.g., "Invalid image because it was taken indoors.").
+      - IF THE IMAGE IS VALID: Proceed to Step 3.
+
+      STEP 3: IN-DEPTH ANALYSIS (FOR VALID IMAGES ONLY)
+      - Location Context Analysis: Based on the location data (${location}), identify the area's characteristics (e.g., dense urban area, near a river, hilly region, coastal area).
+      - Weather Condition Analysis: Correlate the current weather data (e.g., heavy rain, strong winds, extreme heat) with what is visible in the image.
+      - Image Element Analysis: Identify key elements in the picture (e.g., river water level, vegetation health, trash piles, dark clouds, soil condition).
+      - Risk Assessment: Based on all the information above, determine a risk category (e.g., "Potential Flood," "Normal Conditions," "Signs of Drought," "Poorly Maintained Environment"). Write a description that explains your analysis.
+
+      FINAL OUTPUT RULES:
+        Provide the output ONLY in a JSON object format. Do not include markdown backticks (\`\) or the word "json" at the beginning.
       {
-        "image_status": "valid/invalid",
-        "confidence": "High/Medium/Low/None",
-        "presentage_confidence": "90%",
-        "category": "...",
-        "description": "..."
+        "image_status": "valid" or "invalid",
+        "confidence": "High/Medium/Low/None" (Use "None" if invalid),
+        "presentage_confidence": "e.g., 95%" (Use "0%" if invalid),
+        "category": "Determine the category based on your analysis, or 'Invalid Image' if invalid",
+        "description": "Explain your analysis or the reason for the invalid status.",
+        "title": "Create a short title that summarizes the image's condition/your analysis."
       }
-      First Note: Only return JSON object. No code block.
-      Second Note: If invalid, set confidence="None", presentage_confidence="0%", category="Invalid Image", explain reason.
     `;
 
     const analysis = await groq.chat.completions.create({
@@ -145,14 +160,20 @@ export const processImage = async (req: Request, res: Response) => {
     try { parsedAnalysis = JSON.parse(analysisResult || '{}'); }
     catch (e) { /* fallback to empty obj */ }
 
-    const { confidence = 'None', category = 'Normal', description = 'No description provided', presentage_confidence = '0%', image_status = 'invalid' } = parsedAnalysis as any;
+    const { confidence = 'None', category = 'Normal', description = 'No description provided', presentage_confidence = '0%', image_status = 'invalid', title = 'Untitled' } = parsedAnalysis as any;
     const totalTokenReward = countTokenReward(confidence);
 
-    // // Send reward if valid
-    // if (user && totalTokenReward > 0) {
-    //   try { await sendReportReward(totalTokenReward); }
-    //   catch (rewardError) { console.error('Error sending reward:', rewardError); }
-    // }
+    // Send reward if valid
+    if (identity && delegation && totalTokenReward > 0) {
+      try {
+        await giveReward({
+          identity: identity, delegation, amount: BigInt(totalTokenReward)
+        }).then((data) => {
+          console.log('Reward transaction details:', data);
+        });
+      }
+      catch (rewardError) { console.error('Error sending reward:', rewardError); }
+    }
 
     // Save report
     await Actor.addReport(repId, {
@@ -161,7 +182,8 @@ export const processImage = async (req: Request, res: Response) => {
       category,
       description,
       location,
-      coordinates: coordinates || { latitude: 0, longitude: 0 },
+      title,
+      coordinates: { latitude: locationData?.latitude || 0, longitude: locationData?.longitude || 0 },
       imageCid: url || '',
       status: image_status === 'valid' ? 'valid' : 'invalid',
       timestamp: BigInt(Date.now()),
@@ -175,28 +197,6 @@ export const processImage = async (req: Request, res: Response) => {
     return errorResponse(res, 'Failed to process image', error);
   }
 };
-
-// // Token reward util
-// export const sendReportReward = async (tokenAmount: number) => {
-//   try {
-//     const Actor = await useToken();
-//     const Reward = await Actor.icrc1_transfer({
-//       from_subaccount: [],
-//       to: {
-//         owner: Principal.fromText('3gzjj-udemb-yhgo6-dyii6-sxlue-eo237-2egks-yvafd-vxnrx-swnwn-5qe') as any,
-//         subaccount: []
-//       },
-//       amount: BigInt(tokenAmount),
-//       fee: [],
-//       memo: [],
-//       created_at_time: []
-//     });
-//     return Reward;
-//   } catch (error) {
-//     console.error('Error sending token reward:', error);
-//     throw new Error(`Failed to send token reward: ${(error as Error).message}`);
-//   }
-// };
 
 // Get most reported category
 export async function getMostReportedCategory(req: Request, res: Response) {
@@ -226,7 +226,7 @@ export async function getReportById(req: Request, res: Response) {
 export async function getLatestReports(req: Request, res: Response) {
   try {
     const Actor = await useBackend();
-    const latestReports = await Actor.getLatestReport();
+    const latestReports = await Actor.getLatestReports();
     res.json({ success: true, reports: sanitize(latestReports) });
   } catch (error) {
     return errorResponse(res, 'Failed to fetch latest reports', error);
@@ -236,7 +236,6 @@ export async function getLatestReports(req: Request, res: Response) {
 // Get my report (per user)
 export async function getMyReport(req: Request, res: Response) {
   const { identity, delegation } = req.body;
-  console.log('getMyReport called with identity:', identity, 'delegation:', delegation);
   if (!identity || !delegation) {
     return res.status(400).json({
       error: 'Missing required fields: identity and delegation are required'

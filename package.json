@@ -1,5 +1,8 @@
 {
   "name": "greenspace",
+  "workspaces": [
+    "api"
+  ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "prebuild": "npm run prebuild --workspaces --if-present",
@@ -7,20 +10,15 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
-  "workspaces": [
-    "api"
-  ],
-  "dependencies": {
-    "@azure/storage-blob": "^12.27.0",
-    "@huggingface/inference": "^4.0.4",
-    "@storacha/client": "^1.4.0",
-    "body-parser": "^2.2.0",
-    "connect-timeout": "^1.9.0",
-    "groq-sdk": "^0.25.0",
-    "uuid": "^11.1.0"
-  },
   "devDependencies": {
     "prettier": "^3.5.3",
     "prettier-plugin-motoko": "^0.11.0"
+  },
+  "dependencies": {
+    "@dfinity/agent": "^2.4.1",
+    "@dfinity/candid": "^2.4.1",
+    "@dfinity/identity-secp256k1": "^2.4.1",
+    "@dfinity/principal": "^2.4.1",
+    "@dfinity/utils": "^2.13.1"
   }
 }
