@@ -6,11 +6,14 @@ import {
 import {
   canisterId as backendCanister,
   createActor as backendActor,
-} from '../../../src/declarations/backend';
+} from '../declarations/backend';
 import {
   canisterId as tokenCanister,
   createActor as tokenActor,
-} from '../../../src/declarations/gsp_ledger';
+} from '../declarations/gsp_ledger';
+import { Principal } from '@dfinity/principal';
+import { Identity } from '@dfinity/agent';
+import { AccountIdentifier } from '@dfinity/ledger-icp';
 
 
 export async function useBackend(
@@ -29,8 +32,8 @@ export async function useBackend(
       identity instanceof Ed25519KeyIdentity
         ? identity
         : Ed25519KeyIdentity.fromJSON(
-            typeof identity === 'string' ? identity : JSON.stringify(identity)
-          );
+          typeof identity === 'string' ? identity : JSON.stringify(identity)
+        );
 
     delegationIdentity = DelegationIdentity.fromDelegation(
       reconstructedBase,
@@ -46,10 +49,34 @@ export async function useBackend(
   });
 }
 
-export async function useToken() {
-  return tokenActor(process.env.CANISTER_ID_ICRC1 || tokenCanister, {
+export async function useToken(
+  identity?: Ed25519KeyIdentity,
+  delegation?: DelegationChain | string,
+  ownerIdentity?: Identity
+) {
+  let delegationIdentity;
+
+  if (identity && delegation) {
+    const reconstructedChain =
+      typeof delegation === 'string'
+        ? DelegationChain.fromJSON(delegation)
+        : delegation;
+
+    const reconstructedBase =
+      identity instanceof Ed25519KeyIdentity
+        ? identity
+        : Ed25519KeyIdentity.fromJSON(
+          typeof identity === 'string' ? identity : JSON.stringify(identity)
+        );
+
+    delegationIdentity = DelegationIdentity.fromDelegation(
+      reconstructedBase,
+      reconstructedChain
+    );
+  } return tokenActor(process.env.CANISTER_ID_GSP_LEDGER || tokenCanister, {
     agentOptions: {
       host: process.env.TOKEN_AGENT_HOST || 'https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=gr64m-2yaaa-aaaaj-a2dda-cai',
+      identity: ownerIdentity || delegationIdentity,
     },
   });
 }

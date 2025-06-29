@@ -9,6 +9,7 @@ import { sanitize } from '../utils/sanitize';
 import { Principal } from '@dfinity/principal';
 import { storeImageToStorage } from '../utils/storeImageToStorage';
 import { imageBuffer } from '../utils/imageBuffer';
+import { giveReward } from './tokenControllers';
 
 // ---------- Helper for Error Response ----------
 function errorResponse(res: Response, msg: string, error?: unknown, code = 500) {
@@ -148,11 +149,20 @@ export const processImage = async (req: Request, res: Response) => {
     const { confidence = 'None', category = 'Normal', description = 'No description provided', presentage_confidence = '0%', image_status = 'invalid' } = parsedAnalysis as any;
     const totalTokenReward = countTokenReward(confidence);
 
-    // // Send reward if valid
-    // if (user && totalTokenReward > 0) {
-    //   try { await sendReportReward(totalTokenReward); }
-    //   catch (rewardError) { console.error('Error sending reward:', rewardError); }
-    // }
+    // Send reward if valid
+    console.log(`Processing report for user: ${user}`);
+    if (identity && delegation && totalTokenReward > 0) {
+      console.log(`Total token reward for user ${user}: ${totalTokenReward}`);
+      try {
+        await giveReward({
+          identity: identity, delegation, amount: BigInt(totalTokenReward)
+        }).then((data) => {
+          console.log(`Reward of ${totalTokenReward} tokens sent to user: ${user}`);
+          console.log('Reward transaction details:', data);
+        });
+      }
+      catch (rewardError) { console.error('Error sending reward:', rewardError); }
+    }
 
     // Save report
     await Actor.addReport(repId, {

@@ -11,12 +11,10 @@ import { Ed25519KeyIdentity } from "@dfinity/identity";
 
 // Create user
 export async function addUser(req: Request, res: Response) {
-  console.time('addUser_total'); // Mulai waktu total
 
   const { username, email, delegation, identity } = req.body;
+  let pictureUrl: string | null = null;
 
-  // Cek input dan file
-  if (!req.file) return badRequest(res, "Missing required fields: picture");
   if (!username || !email)
     return badRequest(res, "Missing required fields: username and email");
   if (!delegation || !identity)
@@ -24,33 +22,19 @@ export async function addUser(req: Request, res: Response) {
 
 
   try {
-    // --- Measure buffer extraction
-    console.time('buffer_extraction');
-    const picture = imageBuffer(req);
-    console.timeEnd('buffer_extraction');
+    if (req.file) {
+      pictureUrl = await storeImageToStorage(req.file, req, res, 'users');
+    }
 
-    // --- Measure Azure Blob Storage upload
-    console.time('azure_upload');
-    const pictureUrl = await storeImageToStorage(req.file, req, res, 'users');
-    console.timeEnd('azure_upload');
+    if (!pictureUrl) pictureUrl = "default.jpg";
 
-    if (!pictureUrl) return internalError(res, "Failed to store picture to Storage");
-
-    // --- Measure Actor creation
-    console.time('actor_creation');
     const Actor = await useBackend(identity, delegation);
-    console.timeEnd('actor_creation');
 
-    // --- Measure canister call
-    console.time('canister_call');
     await Actor.addUser(email, username, pictureUrl);
-    console.timeEnd('canister_call');
 
     res.status(200).json({ message: "User created successfully" });
   } catch (error) {
     return internalError(res, "Failed to add user", error);
-  } finally {
-    console.timeEnd('addUser_total'); // Akhiri waktu total
   }
 }
 
@@ -108,8 +92,8 @@ export async function getUsers(req: Request, res: Response) {
 
 
 
-export async function getPrincipal(identity: Ed25519KeyIdentity, delegation: string): Promise<Principal>  {
-    const actor = await useBackend(identity, delegation);
-    const principal = actor.whoami();
-    return principal;
+export async function getPrincipal(identity: Ed25519KeyIdentity, delegation: string): Promise<Principal> {
+  const actor = await useBackend(identity, delegation);
+  const principal = actor.whoami();
+  return principal;
 }
